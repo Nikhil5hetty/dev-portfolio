@@ -1,0 +1,35 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { formatDate } from "@/lib/formatDate";
+import { isPublished } from "@/lib/content";
+import { SITE } from "@/site";
+
+export async function getStaticPaths() {
+  const posts = (await getCollection("posts")).filter(isPublished);
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+---
+
+<BaseLayout title={`${post.data.title} | ${SITE.author}`} description={post.data.description}>
+  <article class="mx-auto max-w-3xl">
+    <header class="space-y-5">
+      <p class="text-xs uppercase tracking-[0.28em] text-[var(--accent)]">Blog post</p>
+      <h1 class="text-4xl font-semibold tracking-[-0.04em] text-[var(--text)] sm:text-5xl">
+        {post.data.title}
+      </h1>
+      <p class="text-lg leading-8 text-[var(--muted)]">{post.data.description}</p>
+      <p class="text-sm text-[var(--muted)]">{formatDate(post.data.date)}</p>
+    </header>
+
+    <div class="panel prose-custom mt-10 max-w-none rounded-[2rem] p-7 sm:p-10">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

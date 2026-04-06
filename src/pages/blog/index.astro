@@ -1,0 +1,34 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import EntryCard from "@/components/EntryCard.astro";
+import { isPublished, sortByDateDesc } from "@/lib/content";
+import { SITE } from "@/site";
+
+const posts = sortByDateDesc((await getCollection("posts")).filter(isPublished));
+---
+
+<BaseLayout title={`Blog | ${SITE.author}`} description="Notes, essays, and technical writeups.">
+  <section class="space-y-4">
+    <p class="text-xs uppercase tracking-[0.28em] text-[var(--accent)]">Blog</p>
+    <h1 class="text-5xl font-semibold tracking-[-0.04em] text-[var(--text)] sm:text-6xl">
+      Writing and notes
+    </h1>
+    <p class="max-w-3xl text-lg leading-8 text-[var(--muted)] sm:text-[1.15rem]">
+      This will be the home for technical posts, learning notes, and practical reflections from
+      building data platforms.
+    </p>
+  </section>
+
+  <section class="mt-10 grid gap-5 md:grid-cols-2">
+    {posts.map((post) => (
+      <EntryCard
+        href={`/blog/${post.slug}/`}
+        title={post.data.title}
+        description={post.data.description}
+        meta={post.data.date.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+        tags={post.data.tags.slice(0, 4)}
+      />
+    ))}
+  </section>
+</BaseLayout>

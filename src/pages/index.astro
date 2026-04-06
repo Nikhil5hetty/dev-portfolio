@@ -1,0 +1,107 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import EntryCard from "@/components/EntryCard.astro";
+import { SITE } from "@/site";
+import { isPublished, sortByDateDesc } from "@/lib/content";
+import { withBase } from "@/lib/withBase";
+import { PROFILE } from "@/data/profile";
+
+const [posts, projects] = await Promise.all([
+  getCollection("posts"),
+  getCollection("projects"),
+]);
+
+const publishedPosts = sortByDateDesc(posts.filter(isPublished));
+const publishedProjects = sortByDateDesc(projects.filter(isPublished));
+const featuredProjects = publishedProjects.filter(({ data }) => data.featured);
+---
+
+<BaseLayout title={SITE.title} description={PROFILE.summary}>
+  <section class="panel rounded-[2rem] p-7 sm:p-10">
+    <p class="inline-flex rounded-full border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2 text-sm text-[var(--accent)]">
+      {PROFILE.role}
+    </p>
+
+    <div class="mt-6 space-y-5">
+      <h1 class="max-w-4xl text-2xl font-semibold leading-[1.35] tracking-[-0.02em] text-[var(--text)] sm:text-3xl lg:text-4xl">
+        I’m <span class="underline decoration-[0.14em] underline-offset-4">Nikhil</span>,
+        a data-focused engineer passionate about building scalable and reliable systems.
+      </h1>
+      <p class="max-w-3xl text-base leading-7 text-[var(--muted)] sm:text-lg">
+        {PROFILE.summary}
+      </p>
+      <p class="text-sm text-[var(--muted)]">
+        {PROFILE.currentStudy}
+      </p>
+    </div>
+
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a
+        href={withBase("/projects/")}
+        class="rounded-full border border-[var(--line)] px-5 py-3 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/40 hover:bg-[var(--surface-strong)]"
+      >
+        View case studies
+      </a>
+      <a
+        href={withBase("/blog/")}
+        class="rounded-full border border-[var(--line)] px-5 py-3 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/40 hover:bg-[var(--surface-strong)]"
+      >
+        Read featured writing
+      </a>
+    </div>
+  </section>
+
+  <section class="mt-16 space-y-6">
+    <div class="flex items-end justify-between gap-4">
+      <div>
+        <p class="text-sm text-[var(--accent)]">Featured projects</p>
+        <h2 class="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--text)] sm:text-4xl">
+          Spark ETL and lakehouse work that maps to real jobs
+        </h2>
+      </div>
+      <a class="text-sm text-[var(--accent)] hover:text-[var(--accent-strong)]" href={withBase("/projects/")}>
+        View all
+      </a>
+    </div>
+
+    <div class="grid gap-5 md:grid-cols-3">
+      {featuredProjects.slice(0, 3).map((project) => (
+        <EntryCard
+          href={`/projects/${project.slug}/`}
+          title={project.data.title}
+          description={project.data.description}
+          meta={`${project.data.status} · ${project.data.date.toLocaleDateString("en-US", { month: "short", year: "numeric" })}`}
+          tags={project.data.stack.slice(0, 4)}
+        />
+      ))}
+    </div>
+  </section>
+
+  <section class="mt-16 space-y-6">
+    <div class="flex items-end justify-between gap-4">
+      <div>
+        <p class="text-sm text-[var(--accent)]">Recent writing</p>
+        <h2 class="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--text)] sm:text-4xl">
+          Practical notes on Spark, ETL, and data delivery
+        </h2>
+      </div>
+      <a class="text-sm text-[var(--accent)] hover:text-[var(--accent-strong)]" href={withBase("/blog/")}>
+        View all
+      </a>
+    </div>
+
+    <div class="grid gap-5 md:grid-cols-2">
+      {publishedPosts.slice(0, 2).map((post) => (
+        <EntryCard
+          href={`/blog/${post.slug}/`}
+          title={post.data.title}
+          description={post.data.description}
+          meta={post.data.date.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+          tags={post.data.tags.slice(0, 4)}
+        />
+      ))}
+    </div>
+  </section>
+
+</BaseLayout>

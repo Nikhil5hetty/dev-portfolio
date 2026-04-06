@@ -1,0 +1,33 @@
+---
+title: "Streaming with Spark Structured Streaming and Kafka"
+description: "A short technical note on the choices that make streaming pipelines reliable instead of fragile."
+date: 2026-04-03
+featured: false
+tags:
+  - streaming
+  - kafka
+  - spark
+  - data-engineering
+---
+
+Streaming systems feel simple until something fails.
+
+The parts I pay attention to are the ones that determine whether the pipeline recovers cleanly:
+
+- checkpointing
+- consumer offsets
+- schema evolution
+- lag monitoring
+
+If the ingest path is not designed for replay and operational recovery, the rest of the pipeline is
+too expensive to trust.
+
+## What I care about
+
+I want streaming jobs to be:
+
+- easy to restart
+- obvious to observe
+- cheap enough to run continuously
+- predictable enough for downstream teams
+

@@ -1,0 +1,52 @@
+<svg width="1200" height="560" viewBox="0 0 1200 560" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spark Student ETL architecture diagram">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FBFF"/>
+      <stop offset="1" stop-color="#EEF5FF"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="120" y1="80" x2="1080" y2="480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0369A1"/>
+      <stop offset="1" stop-color="#0F4C81"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="560" rx="34" fill="url(#bg)"/>
+  <rect x="24" y="24" width="1152" height="512" rx="28" fill="#FFFFFF" fill-opacity="0.8" stroke="#C6D4E6"/>
+  <text x="60" y="82" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700">Spark Student ETL</text>
+  <text x="60" y="118" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="18">deduplication, explicit joins, bronze to gold summaries</text>
+
+  <rect x="60" y="170" width="170" height="120" rx="22" fill="#F6FAFF" stroke="#B9CBE4"/>
+  <text x="95" y="216" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700">Raw CSV</text>
+  <text x="88" y="245" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">students</text>
+  <text x="76" y="268" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">assignments</text>
+
+  <path d="M250 230H315" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M315 230L298 220M315 230L298 240" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="330" y="170" width="220" height="120" rx="22" fill="#F6FAFF" stroke="#B9CBE4"/>
+  <text x="365" y="208" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700">Notebook + CLI</text>
+  <text x="364" y="240" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">helper functions</text>
+  <text x="364" y="263" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">read / show / save</text>
+
+  <path d="M570 230H635" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M635 230L618 220M635 230L618 240" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="650" y="170" width="210" height="120" rx="22" fill="#F6FAFF" stroke="#B9CBE4"/>
+  <text x="685" y="208" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700">Bronze</text>
+  <text x="678" y="240" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">deduped submissions</text>
+  <text x="687" y="263" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">latest row per key</text>
+
+  <path d="M875 230H940" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M940 230L923 220M940 230L923 240" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="955" y="145" width="185" height="70" rx="20" fill="#F6FAFF" stroke="#B9CBE4"/>
+  <text x="995" y="187" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">Silver</text>
+
+  <rect x="955" y="235" width="185" height="70" rx="20" fill="#F6FAFF" stroke="#B9CBE4"/>
+  <text x="1003" y="277" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">Gold</text>
+
+  <path d="M1048 215V235" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M1048 235L1038 220M1048 235L1058 220" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <text x="80" y="390" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700">Implementation highlights</text>
+  <text x="80" y="425" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="18">deduplicate by submission_id, coalesce class ownership, and keep outputs reproducible in bronze / silver / gold</text>
+</svg>

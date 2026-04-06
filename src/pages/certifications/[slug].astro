@@ -1,0 +1,41 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { formatDate } from "@/lib/formatDate";
+import { isPublished } from "@/lib/content";
+import { SITE } from "@/site";
+
+export async function getStaticPaths() {
+  const certifications = (await getCollection("certifications")).filter(isPublished);
+  return certifications.map((certification) => ({
+    params: { slug: certification.slug },
+    props: { certification },
+  }));
+}
+
+const { certification } = Astro.props;
+const { Content } = await certification.render();
+---
+
+<BaseLayout
+  title={`${certification.data.title} | ${SITE.author}`}
+  description={certification.data.description}
+>
+  <article class="mx-auto max-w-3xl">
+    <header class="space-y-5">
+      <p class="text-xs uppercase tracking-[0.28em] text-[var(--accent)]">Certification</p>
+      <h1 class="text-4xl font-semibold tracking-[-0.04em] text-[var(--text)] sm:text-5xl">
+        {certification.data.title}
+      </h1>
+      <p class="text-lg leading-8 text-[var(--muted)]">{certification.data.description}</p>
+      <p class="text-sm text-[var(--muted)]">
+        {certification.data.issuer}
+        {certification.data.date ? ` · ${formatDate(certification.data.date)}` : ""}
+      </p>
+    </header>
+
+    <div class="panel prose-custom mt-10 max-w-none rounded-[2rem] p-7 sm:p-10">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

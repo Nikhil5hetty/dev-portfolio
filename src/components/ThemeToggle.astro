@@ -1,0 +1,25 @@
+<button
+  type="button"
+  class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--text)] transition hover:border-[var(--accent)]/40 hover:text-[var(--accent)]"
+  aria-label="Toggle color theme"
+  data-theme-toggle
+>
+  <span class="sr-only">Toggle theme</span>
+  <svg class="theme-icon theme-icon-sun h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path
+      d="M12 3v2.25M12 18.75V21M4.75 12H7M17 12h2.25M6.2 6.2l1.59 1.59M16.21 16.21l1.59 1.59M17.8 6.2l-1.59 1.59M7.79 16.21 6.2 17.8"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-width="1.6"
+    />
+    <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6" />
+  </svg>
+  <svg class="theme-icon theme-icon-moon hidden h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path
+      d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 1 0 10.5 10.5Z"
+      stroke="currentColor"
+      stroke-linejoin="round"
+      stroke-width="1.6"
+    />
+  </svg>
+</button>

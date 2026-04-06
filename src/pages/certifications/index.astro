@@ -1,0 +1,39 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import EntryCard from "@/components/EntryCard.astro";
+import { isPublished, sortByDateDesc } from "@/lib/content";
+import { SITE } from "@/site";
+
+const certifications = sortByDateDesc(
+  (await getCollection("certifications")).filter(isPublished)
+);
+---
+
+<BaseLayout
+  title={`Certifications | ${SITE.author}`}
+  description="Certification goals, milestones, and study notes."
+>
+  <section class="space-y-4">
+    <p class="text-xs uppercase tracking-[0.28em] text-[var(--accent)]">Certifications</p>
+    <h1 class="text-5xl font-semibold tracking-[-0.04em] text-[var(--text)] sm:text-6xl">
+      Learning targets and milestones
+    </h1>
+    <p class="max-w-3xl text-lg leading-8 text-[var(--muted)] sm:text-[1.15rem]">
+      This page starts as a simple list of the certifications I want to prioritize, then grows into
+      a record of progress and notes.
+    </p>
+  </section>
+
+  <section class="mt-10 grid gap-5 md:grid-cols-2">
+    {certifications.map((certification) => (
+      <EntryCard
+        href={`/certifications/${certification.slug}/`}
+        title={certification.data.title}
+        description={certification.data.description}
+        meta={certification.data.issuer}
+        tags={certification.data.tags.slice(0, 4)}
+      />
+    ))}
+  </section>
+</BaseLayout>

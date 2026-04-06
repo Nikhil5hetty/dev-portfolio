@@ -1,0 +1,54 @@
+---
+title: "Spark Data Quality"
+description: "A PySpark validation pipeline that profiles messy submissions and writes a cleaned dataset plus a quality report."
+date: 2026-04-04
+featured: true
+category: "Data Quality"
+status: "shipped"
+challenge: "The source dataset contained duplicate rows, missing values, invalid scores, and malformed timestamps that needed to be surfaced before the data could be trusted."
+architecture: "Raw submissions are cast into typed columns, checked with repeatable Spark validation rules, and written into cleaned and reporting outputs."
+scale: "A realistic validation workload where a single bad record can affect downstream reporting, but the pipeline still needs to stay readable and quick to run."
+outcome: "A compact Spark quality-check project that produces both a report for inspection and a cleaned table for downstream use."
+tags:
+  - spark
+  - validation
+  - data-quality
+stack:
+  - PySpark
+  - Python
+  - Parquet
+  - Jupyter
+  - pytest
+lessons:
+  - Quality checks should be written as data transformations so they can run at scale.
+  - A report is more useful when it separates the problem categories clearly.
+  - Lightweight validation is still valuable when it is reproducible and documented.
+repo: "https://github.com/Nikhil5hetty/spark-data-quality.git"
+diagram: "/diagrams/spark-data-quality.svg"
+---
+
+## Overview
+
+This project shows the data-quality mindset behind production pipelines: make the bad records visible,
+preserve the clean records, and keep the rules easy to explain.
+
+## Implementation details
+
+- `clean_submissions()` normalizes types and trims fields before validation.
+- `build_quality_report()` summarizes common issues such as missing values, duplicates, invalid score
+  ranges, and malformed timestamps.
+- `cleaned_dataset()` filters records into a trustworthy output that downstream jobs can use.
+- The notebook walks through the raw frame, typed frame, report, and cleaned output with helper
+  functions so the workflow is easy to follow.
+
+## What the pipeline proves
+
+- Spark-based validation logic
+- repeatable quality reporting
+- separation of inspection output from clean output
+- notebook-friendly debugging and explanation
+
+## Why it matters
+
+Data quality work is often invisible when it succeeds, but this project shows how to make it visible
+without turning it into an oversized framework.

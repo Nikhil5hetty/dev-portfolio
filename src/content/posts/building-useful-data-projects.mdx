@@ -1,0 +1,29 @@
+---
+title: "What a Bronze, Silver, Gold pipeline should prove"
+description: "How to structure a data engineering case study so it demonstrates real architecture decisions."
+date: 2026-04-05
+featured: false
+tags:
+  - etl
+  - databricks
+  - data-platform
+---
+
+Useful data projects should show how the pipeline behaves in production.
+
+That means the write-up should make these things obvious:
+
+- where the raw data lands
+- how the Silver layer changes it
+- what business-ready outputs are created
+- how the team knows the pipeline is healthy
+
+That is why a Bronze / Silver / Gold structure is so easy to explain in interviews: it shows
+responsibility, governance, and operational discipline at the same time.
+
+## What I would highlight
+
+- ingestion contracts
+- validation and data quality
+- lineage between layers
+- failure handling and replay

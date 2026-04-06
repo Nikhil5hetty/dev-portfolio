@@ -1,0 +1,31 @@
+---
+title: "How I tuned Spark pipelines for latency and cost"
+description: "A practical note on where Spark performance gains usually come from in real data engineering work."
+date: 2026-04-06
+featured: true
+tags:
+  - spark
+  - databricks
+  - optimization
+  - data-engineering
+---
+
+The biggest Spark performance wins usually come from understanding the workload rather than
+throwing more code at the problem.
+
+The work I’ve done in production has repeatedly pointed to a small set of levers:
+
+- partitioning and shuffles
+- cluster sizing and execution behavior
+- unnecessary recomputation
+- how data lands in the first place
+
+When I can reduce latency and cost at the same time, the architecture becomes easier for the team
+to trust and easier to operate.
+
+## What I’ll write about here
+
+- Spark optimization patterns
+- Databricks Lakehouse delivery
+- practical ETL design
+- production monitoring and recovery

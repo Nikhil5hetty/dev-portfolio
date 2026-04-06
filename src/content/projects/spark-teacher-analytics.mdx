@@ -1,0 +1,54 @@
+---
+title: "Spark Teacher Analytics"
+description: "A PySpark analytics pipeline that builds teacher scorecards, assignment summaries, and student rankings."
+date: 2026-04-05
+featured: true
+category: "Analytics Dashboards"
+status: "shipped"
+challenge: "Teachers and admins need a reliable view of section performance, but the raw student, assignment, and submission tables have to be joined carefully before meaningful metrics can be built."
+architecture: "Students, assignments, and submissions are cleaned first, then joined into an enriched fact table that powers teacher scorecards, assignment summaries, and ranked class views."
+scale: "An analytics workload with grouped summaries and ranking logic that reflects how production dashboard tables are usually built."
+outcome: "A portfolio project that demonstrates aggregation, window functions, join hygiene, and dashboard-oriented outputs."
+tags:
+  - spark
+  - analytics
+  - dashboards
+stack:
+  - PySpark
+  - Python
+  - Parquet
+  - Jupyter
+  - pytest
+lessons:
+  - Analytics tables are only as reliable as the join logic that feeds them.
+  - Window functions are useful when the final product needs ranking, not just averages.
+  - A clear notebook makes business metrics easier to explain than a single batch job.
+repo: "https://github.com/Nikhil5hetty/spark-teacher-analytics.git"
+diagram: "/diagrams/spark-teacher-analytics.svg"
+---
+
+## Overview
+
+This project turns cleaned student activity into dashboard-ready metrics that could feed a teacher
+view or an administrative summary page.
+
+## Implementation details
+
+- `clean_students()`, `clean_assignments()`, and `clean_submissions()` standardize the source tables.
+- `build_enriched_submissions()` creates a canonical `class_id` and a single submission status field
+  before any metrics are computed.
+- `build_teacher_scorecard()` summarizes submissions by teacher, school, and class.
+- `build_assignment_summary()` surfaces assignment-level performance patterns.
+- `build_student_rankings()` uses a window function to rank learners within each class.
+
+## What the pipeline proves
+
+- Spark joins with explicit field handling
+- grouped metric generation for dashboard tables
+- ranking with window functions
+- notebook-based exploration of the same logic used in the batch pipeline
+
+## Why it matters
+
+This is a strong interview project because it looks like an actual reporting backend:
+clean tables go in, dashboard tables come out, and the transformations are visible end to end.

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" rx="36" fill="#07111F"/>
+  <rect x="44" y="44" width="1112" height="542" rx="28" stroke="#1F314D" stroke-width="2"/>
+  <circle cx="1040" cy="120" r="140" fill="#0F4C81" fill-opacity="0.18"/>
+  <circle cx="1088" cy="462" r="180" fill="#38BDF8" fill-opacity="0.12"/>
+  <text x="88" y="136" fill="#7DD3FC" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="8">
+    NIKHIL SHETTY
+  </text>
+  <text x="88" y="240" fill="#F8FAFC" font-family="Inter, Arial, sans-serif" font-size="62" font-weight="800">
+    Spark ETL & Databricks
+  </text>
+  <text x="88" y="315" fill="#F8FAFC" font-family="Inter, Arial, sans-serif" font-size="62" font-weight="800">
+    Data Engineering Portfolio
+  </text>
+  <text x="88" y="398" fill="#A0AEC4" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="500">
+    Big data projects, streaming systems, and production ETL work
+  </text>
+  <text x="88" y="512" fill="#7DD3FC" font-family="IBM Plex Mono, monospace" font-size="24" font-weight="600">
+    github.com/Nikhil5hetty/dev-portfolio
+  </text>
+</svg>

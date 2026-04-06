@@ -1,0 +1,38 @@
+---
+import { withBase } from "@/lib/withBase";
+
+interface Props {
+  href: string;
+  title: string;
+  description: string;
+  meta?: string;
+  tags?: string[];
+}
+
+const { href, title, description, meta, tags = [] } = Astro.props as Props;
+---
+
+<a
+  href={withBase(href)}
+  class="group block rounded-[1.75rem] border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.08)] transition duration-200 hover:-translate-y-1 hover:border-[color:var(--accent)]/30 hover:bg-[var(--surface-strong)]"
+>
+  <div class="flex h-full flex-col gap-4">
+    <div class="space-y-2">
+      {meta && <p class="text-sm text-[var(--accent)]/90">{meta}</p>}
+      <h3 class="text-lg font-semibold leading-snug text-[var(--text)] transition-colors group-hover:text-[var(--accent)] sm:text-xl">
+        {title}
+      </h3>
+      <p class="text-base leading-7 text-[var(--muted)]">{description}</p>
+    </div>
+
+    {tags.length > 0 && (
+      <ul class="mt-auto flex flex-wrap gap-2">
+        {tags.map((tag) => (
+          <li class="rounded-full border border-[var(--line)] px-3 py-1 text-sm text-[var(--muted)]">
+            {tag}
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</a>

@@ -29,13 +29,24 @@ diagram: "/diagrams/spark-student-etl.svg"
 
 ## Overview
 
-This project is the cleanest Spark ETL example in the portfolio. It shows the full path from raw
-student data to curated outputs, while keeping the implementation simple enough to inspect in a
-notebook.
+This is the clearest end-to-end Spark ETL example in the portfolio. It takes raw student, assignment,
+and submission extracts and turns them into structured bronze, silver, and gold outputs.
+
+The project is deliberately small, but the data-shaping logic reflects real ETL work:
+duplicate records, overlapping class ownership, and summary tables that need to stay reproducible.
+
+## Data flow
+
+1. Read raw CSV extracts for students, assignments, and submissions.
+2. Clean the raw fields and normalize types.
+3. Deduplicate submissions using `submission_id` and recency ordering.
+4. Join the cleaned tables with explicit ownership rules.
+5. Write bronze, silver, and gold parquet outputs for later inspection.
 
 ## Implementation details
 
-- Notebook-local helper functions load raw CSV files, display intermediate results, and write the outputs.
+- Notebook-local helper functions load raw CSV files, display intermediate results, and write the
+  outputs in a way that is easy to follow in Jupyter.
 - `dedupe_submissions()` keeps the latest submission for each `submission_id` using submitted time,
   attempt number, and score as the ordering keys.
 - `build_enriched_submissions()` resolves `class_id` collisions explicitly so downstream aggregates
@@ -45,12 +56,41 @@ notebook.
   - silver: enriched student/assignment submission fact table
   - gold: class and student summaries
 
+## Notebook walkthrough
+
+- The first notebook cell loads the repo root and Spark session.
+- Helper functions keep reads, display, and writes visible inside the notebook.
+- The run cell executes the transformations in the same order as the Python pipeline.
+- The final output tables can be inspected immediately after execution.
+
+## Output tables
+
+### Bronze
+
+The bronze layer keeps one row per logical submission after deduplication.
+
+### Silver
+
+The silver layer joins students and assignments onto submissions so the fact table can be queried
+by class, school, teacher, and learner.
+
+### Gold
+
+The gold layer creates class and student summaries for reporting and dashboard-style views.
+
 ## What the pipeline proves
 
 - structured ingestion with PySpark
 - deduplication based on real business rules
 - safe joins with explicit column handling
 - summary tables that support reporting and dashboards
+- notebook-driven validation of intermediate results
+
+## Testing and validation
+
+- The pure-Python deduplication helper is covered by tests.
+- The notebook writes outputs into `output/` so the result can be checked visually.
+- The project highlights the kind of edge cases that usually cause ETL bugs in production.
 
 ## Why it matters
 

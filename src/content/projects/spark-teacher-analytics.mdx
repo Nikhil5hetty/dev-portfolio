@@ -32,6 +32,17 @@ diagram: "/diagrams/spark-teacher-analytics.svg"
 This project turns cleaned student activity into dashboard-ready metrics that could feed a teacher
 view or an administrative summary page.
 
+It is the most dashboard-oriented project in the portfolio and shows how to turn a relational fact
+table into a set of reporting views with clear metric definitions.
+
+## Data flow
+
+1. Clean the students, assignments, and submissions tables.
+2. Join them into one enriched fact table.
+3. Derive the teacher scorecard and assignment summary.
+4. Rank students within each class.
+5. Save the outputs as dashboard-ready parquet tables.
+
 ## Implementation details
 
 - `clean_students()`, `clean_assignments()`, and `clean_submissions()` standardize the source tables.
@@ -41,12 +52,40 @@ view or an administrative summary page.
 - `build_assignment_summary()` surfaces assignment-level performance patterns.
 - `build_student_rankings()` uses a window function to rank learners within each class.
 
+## Metric outputs
+
+### Teacher scorecard
+
+Summarizes submission counts, student counts, average score, pass rate, and late submissions.
+
+### Assignment summary
+
+Shows how each assignment performed across a class, which is useful for comparing assessment items.
+
+### Student rankings
+
+Ranks learners within each class so the dashboard can surface top performers and relative position.
+
+## Notebook walkthrough
+
+- The notebook loads each raw table with helper functions.
+- The join step is shown explicitly so the fact table structure is visible.
+- Metric outputs are displayed one by one rather than hidden behind a single command.
+- The same logic used in the notebook is also available in the batch pipeline.
+
 ## What the pipeline proves
 
 - Spark joins with explicit field handling
 - grouped metric generation for dashboard tables
 - ranking with window functions
 - notebook-based exploration of the same logic used in the batch pipeline
+- analytics modeling that maps to real reporting requirements
+
+## Testing and validation
+
+- The metric helpers are covered by unit tests.
+- The notebook is useful for verifying the shape of the enriched table before the aggregates are built.
+- The result is easy to explain to both technical and non-technical reviewers.
 
 ## Why it matters
 

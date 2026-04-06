@@ -32,6 +32,17 @@ diagram: "/diagrams/spark-data-quality.svg"
 This project shows the data-quality mindset behind production pipelines: make the bad records visible,
 preserve the clean records, and keep the rules easy to explain.
 
+It is intentionally simple, but it demonstrates how to turn quality checks into repeatable Spark
+transformations instead of one-off notebook inspection.
+
+## Data flow
+
+1. Read the messy submissions extract.
+2. Normalize field types and trim values.
+3. Apply a set of quality checks.
+4. Write a report that summarizes the issues.
+5. Write a cleaned dataset that downstream jobs can trust.
+
 ## Implementation details
 
 - `clean_submissions()` normalizes types and trims fields before validation.
@@ -41,12 +52,38 @@ preserve the clean records, and keep the rules easy to explain.
 - The notebook walks through the raw frame, typed frame, report, and cleaned output with helper
   functions so the workflow is easy to follow.
 
+## Checks performed
+
+### Missing values
+
+The report surfaces records where required fields are blank or null.
+
+### Duplicate rows
+
+Duplicate submissions are counted so the problem is visible before downstream aggregation.
+
+### Invalid score ranges
+
+Scores outside the expected range are flagged instead of being silently accepted.
+
+### Timestamp parsing
+
+Submission dates are normalized into timestamps so malformed records can be identified consistently.
+
+## Notebook walkthrough
+
+- Raw submissions are loaded first so the original shape is visible.
+- A typed frame shows how Spark transforms the schema.
+- The report makes the problem categories explicit.
+- The cleaned dataset is the final usable output.
+
 ## What the pipeline proves
 
 - Spark-based validation logic
 - repeatable quality reporting
 - separation of inspection output from clean output
 - notebook-friendly debugging and explanation
+- quality checks that scale with the data
 
 ## Why it matters
 

@@ -1,0 +1,99 @@
+---
+title: "Spark Understanding Overview"
+description: "A beginner-friendly map of Spark's distributed model, the role of the cluster, and how a Spark application actually runs."
+date: 2020-06-15
+featured: false
+tags:
+  - beginner
+  - spark
+  - distributed-computing
+  - data-engineering
+---
+
+Apache Spark is easiest to understand when you stop thinking of it as a single program and start
+thinking of it as a coordinated system.
+
+At a high level, Spark helps you split a large problem into smaller pieces, run those pieces in
+parallel, and collect the result without losing control of the execution flow.
+
+That is why it shows up so often in ETL, analytics, streaming, and machine learning pipelines.
+
+<figure class="my-8">
+  <img
+    src="https://upload.wikimedia.org/wikipedia/commons/f/f3/Apache_Spark_logo.svg"
+    alt="Apache Spark logo"
+    class="block w-full rounded-[1.5rem] border border-[var(--line)] bg-[var(--surface-strong)] p-4 shadow-[var(--shadow)]"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption class="mt-3 text-sm leading-6 text-[var(--muted)]">
+    Source: <a href="https://commons.wikimedia.org/wiki/File:Apache_Spark_logo.svg" target="_blank" rel="noreferrer">Wikimedia Commons, Apache Spark logo.svg</a>.
+  </figcaption>
+</figure>
+
+## The simple mental model
+
+Every Spark application has a few main parts:
+
+- a **driver** that plans the work
+- **executors** that run the tasks
+- a **cluster manager** that allocates resources
+- shared storage such as HDFS, S3, or a database
+
+The driver is the coordinator. It turns your code into a distributed plan and decides how work
+should move across the cluster.
+
+Executors do the heavy lifting. They process partitions of data, hold intermediate results in
+memory when possible, and return output when the job is done.
+
+## Why Spark needs a cluster
+
+Spark becomes valuable when the data or the workload is too large for one machine to handle
+comfortably.
+
+With a cluster, Spark can:
+
+- process many partitions at the same time
+- recover from node failure
+- keep the runtime predictable for large jobs
+- spread memory and CPU across multiple workers
+
+Without that distributed layer, Spark loses the main reason it exists.
+
+## What happens when a Spark application runs
+
+A Spark job usually follows this flow:
+
+1. You submit the application with `spark-submit` or through a notebook.
+2. The driver builds the logical plan.
+3. Spark asks the cluster manager for resources.
+4. Executors are launched on worker nodes.
+5. The driver breaks the work into stages and tasks.
+6. Tasks run in parallel across partitions.
+7. Results are written back to storage or returned to the caller.
+
+That execution model is what makes Spark powerful and also what makes it worth understanding before
+you start tuning it.
+
+## Cluster managers you will see
+
+Spark can run on different cluster managers:
+
+- **Spark Standalone** for simple dedicated clusters
+- **YARN** in Hadoop-based environments
+- **Kubernetes** in cloud-native deployments
+- **Mesos** in older multi-framework environments
+
+The choice of manager changes how resources are allocated, but the Spark mental model stays the
+same.
+
+## A useful beginner takeaway
+
+If you are new to Spark, remember this:
+
+- the driver plans
+- the executors execute
+- the cluster manager allocates
+- shuffles and joins move data around the cluster
+
+Once that is clear, the rest of Spark becomes much easier to reason about.

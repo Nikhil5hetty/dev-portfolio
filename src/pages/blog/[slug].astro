@@ -15,21 +15,35 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content } = await post.render();
+const tags = post.data.tags ?? [];
 ---
 
 <BaseLayout title={`${post.data.title} | ${SITE.author}`} description={post.data.description}>
-  <article class="mx-auto max-w-3xl">
+  <article class="mx-auto w-full max-w-5xl xl:max-w-6xl">
     <header class="space-y-5">
       <p class="text-xs uppercase tracking-[0.28em] text-[var(--accent)]">Blog post</p>
-      <h1 class="text-4xl font-semibold tracking-[-0.04em] text-[var(--text)] sm:text-5xl">
+      <h1 class="max-w-4xl text-4xl font-semibold tracking-[-0.04em] text-[var(--text)] sm:text-5xl lg:text-6xl">
         {post.data.title}
       </h1>
-      <p class="text-lg leading-8 text-[var(--muted)]">{post.data.description}</p>
+      <p class="max-w-4xl text-xl leading-9 text-[var(--muted)]">
+        {post.data.description}
+      </p>
       <p class="text-sm text-[var(--muted)]">{formatDate(post.data.date)}</p>
+      {tags.length > 0 && (
+        <ul class="flex flex-wrap gap-2 pt-1">
+          {tags.map((tag) => (
+            <li class="rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-1 text-sm text-[var(--muted)]">
+              {tag}
+            </li>
+          ))}
+        </ul>
+      )}
     </header>
 
-    <div class="panel prose-custom mt-10 max-w-none rounded-[2rem] p-7 sm:p-10">
-      <Content />
+    <div class="panel mt-10 rounded-[2rem] p-[0.55rem] sm:p-[0.825rem] lg:p-[1.1rem]">
+      <div class="prose-custom mx-auto max-w-[82ch]">
+        <Content />
+      </div>
     </div>
   </article>
 </BaseLayout>

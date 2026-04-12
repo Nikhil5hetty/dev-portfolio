@@ -1,31 +1,245 @@
 ---
-title: "How I tuned Spark pipelines for latency and cost"
-description: "A practical note on where Spark performance gains usually come from in real data engineering work."
-date: 2026-04-06
+title: "How Structured Streaming and Delta CDF work together"
+description: "A practical guide to using Spark Structured Streaming with Delta Change Data Feed to capture incremental changes and keep target tables current."
+date: 2025-06-15
 featured: true
 tags:
+  - advanced
+  - cdf
+  - delta-tables
+  - structured-streaming
   - spark
-  - databricks
-  - optimization
-  - data-engineering
 ---
 
-The biggest Spark performance wins usually come from understanding the workload rather than
-throwing more code at the problem.
+import { withBase } from "@/lib/withBase";
 
-The work I’ve done in production has repeatedly pointed to a small set of levers:
+When a pipeline needs to stay current, the real question is not whether Spark can process data.
+The question is how to process only the changes, keep the target tables correct, and avoid full
+reloads every time the source changes.
 
-- partitioning and shuffles
-- cluster sizing and execution behavior
-- unnecessary recomputation
-- how data lands in the first place
+That is where Spark Structured Streaming and Delta Change Data Feed work well together.
 
-When I can reduce latency and cost at the same time, the architecture becomes easier for the team
-to trust and easier to operate.
+Structured Streaming gives you the processing model.
+Delta CDF gives you the change history.
+Together, they let you build incremental pipelines that update downstream tables as data changes
+instead of recomputing everything from scratch.
 
-## What I’ll write about here
+## Why this pattern matters
 
-- Spark optimization patterns
-- Databricks Lakehouse delivery
-- practical ETL design
-- production monitoring and recovery
+Many data pipelines start with full batch loads.
+That works until the table becomes large, the refresh window becomes too expensive, or the source
+system starts producing updates and deletes in addition to inserts.
+
+At that point, a batch-only pipeline becomes hard to sustain.
+
+You end up asking questions like:
+
+- how do we detect what changed
+- how do we apply inserts, updates, and deletes correctly
+- how do we avoid reprocessing the entire source
+- how do we keep the downstream table in sync with the upstream table
+
+Delta CDF answers the first question.
+Structured Streaming helps answer the rest.
+
+## What Delta CDF gives you
+
+Delta Change Data Feed exposes the row-level changes committed to a Delta table.
+
+Instead of reading the whole table again, you can read only the change set:
+
+- inserts
+- updates before the change
+- updates after the change
+- deletes
+
+That makes the source table behave more like a stream of business events than a static snapshot.
+
+For pipeline design, this is powerful because it gives you a clean way to build incremental logic
+on top of a table that is already being updated by upstream jobs or ingestion processes.
+
+## What Structured Streaming adds
+
+Structured Streaming gives Spark a continuous processing model with checkpointing, offsets, and
+micro-batch execution.
+
+In practice, that means you can:
+
+- read changes incrementally
+- maintain state across runs
+- recover after failure
+- resume from a checkpoint instead of starting over
+
+When the source is a Delta table with CDF enabled, the stream can consume only the new changes from
+the table and process them in order.
+
+## How the pipeline usually looks
+
+A common design is:
+
+1. A source system writes into a Delta table.
+2. Delta CDF captures row-level changes on that table.
+3. A Structured Streaming job reads the change feed.
+4. The job transforms the changes into the target model.
+5. The target table is updated using `MERGE`, `INSERT`, or delete logic depending on the change type.
+
+This gives you an incremental pipeline that is both efficient and auditable.
+
+<figure class="my-10">
+  <img
+    src={withBase("/diagrams/structured-streaming-delta-cdf.svg")}
+    alt="Structured Streaming and Delta CDF pipeline flow from source Delta table through change feed to target tables"
+    class="w-full rounded-[1.75rem] border border-[var(--line)] bg-[var(--surface-strong)] shadow-[var(--shadow)]"
+  />
+  <figcaption class="mt-3 text-sm leading-6 text-[var(--muted)]">
+    The source Delta table emits row-level changes through CDF, Structured Streaming consumes the
+    feed, and the target table is updated incrementally through merge logic.
+  </figcaption>
+</figure>
+
+## Why this is better than full reloads
+
+Full reloads are simple, but they do not scale well when the table grows.
+
+They also make it harder to preserve operational freshness because:
+
+- large tables take longer to rebuild
+- downstream consumers wait longer for the latest state
+- every refresh reprocesses rows that did not change
+- the compute cost grows with the table size, not with the change volume
+
+With CDF, the pipeline work is proportional to the actual change volume.
+That is the difference between a system that keeps up and a system that constantly catches up.
+
+## How I think about the target table
+
+The target table is not just a copy of the source.
+It is the current business state after applying change logic.
+
+For example:
+
+- a new row should be inserted
+- an existing row should be updated
+- a removed record should be deleted or marked inactive
+- a late arriving correction should overwrite the old value
+
+That is why CDF is useful in combination with a merge-based design.
+The stream tells you what changed.
+The merge logic tells you how the target should react.
+
+## A practical merge pattern
+
+The common implementation is to read the CDF stream in micro-batches and apply each batch to the
+target table.
+
+Conceptually, that looks like this:
+
+```python
+(
+    spark.readStream
+      .format("delta")
+      .option("readChangeFeed", "true")
+      .table("source_table")
+)
+```
+
+The stream produces change records with metadata that identifies the type of change and the commit
+version.
+
+Inside the batch handler, you can then:
+
+- filter inserts and updates
+- separate delete records
+- merge the current changes into the target table
+- persist checkpoint state so the next run continues safely
+
+That pattern is especially useful when the downstream table must remain queryable as a clean,
+current-state representation.
+
+## Why the checkpoint matters
+
+Checkpointing is what makes Structured Streaming reliable in production.
+
+Without it, you are always guessing where the pipeline left off.
+With it, Spark remembers the progress of the stream and resumes from the last committed point.
+
+That is important when CDF is driving a table update pipeline because:
+
+- you do not want to apply the same change twice
+- you do not want to skip a change after a restart
+- you want the target table to remain consistent even if the job fails mid-run
+
+The checkpoint is part of the contract, not an optional detail.
+
+## How this helps when setting up the pipeline
+
+This combination gives you a clear mental model while designing the solution:
+
+- the source Delta table is the system of record
+- CDF is the incremental change layer
+- Structured Streaming is the transport and execution layer
+- the target table is the business-facing state layer
+
+Once that is clear, the rest of the architecture becomes easier to reason about.
+
+You know where to land the raw changes.
+You know where to apply the transformation.
+You know where the final business view should live.
+
+## What can go wrong
+
+A good incremental design still needs discipline.
+
+The most common issues are:
+
+- forgetting to enable CDF on the source table
+- not handling updates and deletes explicitly
+- using a target table that is not designed for merge semantics
+- ignoring schema evolution in the incoming changes
+- using an unstable checkpoint location
+
+If those problems are not addressed, the pipeline may still run, but the results will eventually
+drift from the source truth.
+
+## Schema evolution and incremental changes
+
+Schema evolution matters here because source tables do change over time.
+
+New columns can appear.
+Existing columns can change type or meaning.
+Nested records can evolve as the business changes.
+
+The pipeline should not break every time that happens.
+
+In practice, that means:
+
+- the ingestion layer should tolerate the raw shape
+- the transformation layer should normalize the fields that matter
+- the target table should expose a stable contract for consumers
+
+That separation helps incremental processing stay maintainable even as the source model evolves.
+
+## The design payoff
+
+Using Spark Structured Streaming with Delta CDF gives you a pipeline that is:
+
+- incremental instead of full-refresh based
+- resilient to restarts through checkpointing
+- aligned with the actual change volume
+- able to keep target tables current
+- easier to reason about when source data changes over time
+
+It is a strong pattern whenever the source table is already being maintained in Delta and the
+downstream system needs to stay synchronized without repeated full scans.
+
+## The main takeaway
+
+If you want a pipeline that updates tables correctly and efficiently, the key is not just streaming.
+The key is incremental change processing with a reliable state model.
+
+Structured Streaming provides the execution framework.
+Delta CDF provides the row-level change feed.
+Merge logic updates the target tables.
+Checkpointing makes the whole thing restartable.
+
+That combination is what turns a Spark pipeline into a practical incremental data system.

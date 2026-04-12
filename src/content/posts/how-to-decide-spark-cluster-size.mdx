@@ -1,0 +1,122 @@
+---
+title: "How to Decide Spark Cluster Size"
+description: "A practical framework for balancing latency, throughput, and cost when choosing Spark driver and executor sizing."
+date: 2021-07-18
+featured: false
+tags:
+  - intermediate
+  - spark
+  - cluster-sizing
+  - cost-optimization
+  - performance
+---
+
+Cluster sizing is not just a capacity question. It is a cost decision, a latency decision, and a
+workload-fit decision at the same time.
+
+The wrong cluster can make a job expensive without making it fast. The right cluster does the
+opposite: it finishes in a predictable amount of time without paying for unnecessary compute.
+
+<figure class="my-8">
+  <img
+    src="https://media.licdn.com/dms/image/v2/D5622AQEPo5n4H-aUAg/feedshare-shrink_800/B56ZlnKEIYJwAg-/0/1758372317001?e=1777507200&v=beta&t=4Cj6bhIugQUxqCCIR35FBKDhMfbDXX0c1fX8LNbyjDI"
+    alt="LinkedIn image shared for the Spark cluster sizing discussion"
+    class="mx-auto block w-full max-w-4xl rounded-[1.5rem] border border-[var(--line)] bg-[var(--surface-strong)] shadow-[var(--shadow)]"
+    loading="lazy"
+    decoding="async"
+    referrerpolicy="no-referrer"
+  />
+  <figcaption class="mt-3 text-sm leading-6 text-[var(--muted)]">
+    Source: <a href="https://media.licdn.com/dms/image/v2/D5622AQEPo5n4H-aUAg/feedshare-shrink_800/B56ZlnKEIYJwAg-/0/1758372317001?e=1777507200&v=beta&t=4Cj6bhIugQUxqCCIR35FBKDhMfbDXX0c1fX8LNbyjDI" target="_blank" rel="noreferrer">LinkedIn image provided in the prompt</a>.
+  </figcaption>
+</figure>
+
+## Start with the workload
+
+Before choosing node sizes, look at the shape of the work:
+
+- how much data is being read
+- how many joins are involved
+- whether the job shuffles heavily
+- whether the data is skewed
+- how often the job runs
+- what runtime target you need to meet
+
+A join-heavy workload behaves very differently from a simple filter-and-write pipeline. You should
+size for the work that actually dominates the runtime.
+
+## Cost and latency move together
+
+This is the line I always try to make visible:
+
+- more compute usually reduces latency
+- more compute also increases cost
+- too little compute increases spill, retries, and runtime
+- too much compute wastes money and can still leave you with a slow plan
+
+The goal is not maximum cluster size. The goal is the smallest cluster that meets the SLA with
+acceptable stability.
+
+## Driver versus workers
+
+The driver and worker nodes have different jobs.
+
+The **driver**:
+
+- builds the plan
+- coordinates task execution
+- tracks metadata and stage progress
+
+The **workers / executors**:
+
+- process partitions
+- execute joins and transformations
+- hold shuffle data and cached data
+
+If the driver is undersized, planning and coordination become a bottleneck. If the workers are
+undersized, the job spills memory, shuffles more slowly, and spends too long waiting on data.
+
+## Choosing instance types
+
+The best instance type depends on the workload:
+
+- use enough memory for shuffle-heavy joins
+- use enough CPU for parallel task execution
+- avoid oversized nodes if the job does not need them
+- avoid tiny nodes if they cause constant spilling or GC pressure
+
+For workloads with large joins, the right driver and worker instance type often matter more than
+just increasing the number of nodes.
+
+## A practical join-heavy rule
+
+When the job spends most of its time in joins, the sizing question becomes:
+
+- can one side of the join be broadcast?
+- if not, how much shuffle will happen?
+- will the executor memory hold the working set?
+- does the cluster have enough parallelism to keep latency reasonable?
+
+If the join pattern is wide and shuffle-heavy, scaling out can help more than scaling up. If the
+workset is memory-sensitive, a slightly larger executor can prevent spilling and reduce total
+runtime.
+
+## How I would decide in practice
+
+I usually work through this sequence:
+
+1. Identify the bottleneck from Spark UI metrics.
+2. Check shuffle read and write, spill, and task duration.
+3. Compare driver and executor pressure.
+4. Pick node sizes that fit the working set.
+5. Run a small benchmark before locking the cluster in.
+
+That process keeps the cluster grounded in the actual workload rather than in guesswork.
+
+## The tradeoff to remember
+
+If you want lower latency, you pay for more resources.
+If you want lower cost, you accept some runtime.
+
+The right decision is the one that matches the business requirement, not the one that looks best on a
+spec sheet.

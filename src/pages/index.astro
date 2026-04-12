@@ -15,39 +15,80 @@ const [posts, projects] = await Promise.all([
 const publishedPosts = sortByDateDesc(posts.filter(isPublished));
 const publishedProjects = sortByDateDesc(projects.filter(isPublished));
 const featuredProjects = publishedProjects.filter(({ data }) => data.featured);
+
+const iconButtonClass =
+  "inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/40 hover:bg-[var(--surface-strong)]";
+const resumeButtonClass =
+  "inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/40 hover:bg-[var(--surface-strong)]";
 ---
 
 <BaseLayout title={SITE.title} description={PROFILE.summary}>
-  <section class="panel rounded-[2rem] p-7 sm:p-10">
+  <section class="panel home-hero rounded-[2rem] p-7 sm:p-10">
     <p class="inline-flex rounded-full border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2 text-sm text-[var(--accent)]">
       {PROFILE.role}
     </p>
 
-    <div class="mt-6 space-y-5">
-      <h1 class="max-w-4xl text-2xl font-semibold leading-[1.35] tracking-[-0.02em] text-[var(--text)] sm:text-3xl lg:text-4xl">
-        I’m <span class="underline decoration-[0.14em] underline-offset-4">Nikhil</span>,
-        a data-focused engineer passionate about building scalable and reliable systems.
-      </h1>
-      <p class="max-w-3xl text-base leading-7 text-[var(--muted)] sm:text-lg">
-        {PROFILE.summary}
-      </p>
-      <p class="text-sm text-[var(--muted)]">
-        {PROFILE.currentStudy}
-      </p>
+    <div class="mt-6 grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+      <div class="space-y-5">
+        <h1 class="max-w-4xl text-2xl font-semibold leading-[1.35] tracking-[-0.02em] text-[var(--text)] sm:text-3xl lg:text-4xl">
+          I’m <span class="underline decoration-[0.14em] underline-offset-4">Nikhil</span>, a seasoned
+          data engineer building scalable and reliable systems for modern data platforms.
+        </h1>
+        <p class="max-w-3xl text-base leading-7 text-[var(--muted)] sm:text-lg">
+          {PROFILE.summary}
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <span class="inline-flex rounded-full border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2 text-sm text-[var(--accent)]">
+            {PROFILE.currentStudy}
+          </span>
+        </div>
+      </div>
+
+      <div class="lg:justify-self-end">
+        <div class="mx-auto w-full max-w-[280px] overflow-hidden rounded-[2rem] border border-[var(--line)] bg-[var(--surface-strong)] shadow-[var(--shadow)]">
+          <img
+            src={withBase("/images/profile-photo.jpeg")}
+            alt="Portrait of Nikhil Shetty"
+            class="aspect-square w-full object-cover object-[50%_18%]"
+            loading="eager"
+            decoding="async"
+          />
+        </div>
+      </div>
     </div>
 
     <div class="mt-8 flex flex-wrap gap-3">
       <a
-        href={withBase("/projects/")}
-        class="rounded-full border border-[var(--line)] px-5 py-3 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/40 hover:bg-[var(--surface-strong)]"
+        href="https://github.com/Nikhil5hetty"
+        target="_blank"
+        rel="noreferrer"
+        class={iconButtonClass}
       >
-        View case studies
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 2C6.48 2 2 6.48 2 12c0 4.41 2.87 8.16 6.84 9.49.5.09.68-.22.68-.48 0-.24-.01-.87-.01-1.71-2.78.61-3.37-1.34-3.37-1.34-.46-1.18-1.12-1.49-1.12-1.49-.92-.63.07-.62.07-.62 1.02.07 1.56 1.05 1.56 1.05.9 1.55 2.35 1.1 2.93.84.09-.66.35-1.1.63-1.35-2.22-.25-4.56-1.11-4.56-4.93 0-1.09.39-1.98 1.04-2.68-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.02a9.56 9.56 0 0 1 2.5-.34c.85 0 1.71.11 2.5.34 1.9-1.29 2.74-1.02 2.74-1.02.56 1.42.21 2.47.11 2.73.64.7 1.03 1.59 1.03 2.68 0 3.83-2.34 4.68-4.57 4.92.36.31.69.93.69 1.88 0 1.36-.01 2.45-.01 2.78 0 .26.18.57.69.47A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10Z" fill="currentColor"/>
+        </svg>
+        GitHub
       </a>
       <a
-        href={withBase("/blog/")}
-        class="rounded-full border border-[var(--line)] px-5 py-3 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/40 hover:bg-[var(--surface-strong)]"
+        href="https://www.linkedin.com/in/nikhil5hetty/"
+        target="_blank"
+        rel="noreferrer"
+        class={iconButtonClass}
       >
-        Read featured writing
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4.98 3.5C4.98 4.88 3.9 6 2.5 6S0 4.88 0 3.5 1.1 1 2.5 1 4.98 2.12 4.98 3.5ZM.19 8.98H4.81V23H.19V8.98ZM8.25 8.98h4.44v1.92h.06c.62-1.17 2.13-2.4 4.38-2.4 4.69 0 5.55 3.09 5.55 7.11V23h-4.63v-6.07c0-1.45-.03-3.31-2.02-3.31-2.03 0-2.34 1.58-2.34 3.2V23H8.25V8.98Z" fill="currentColor"/>
+        </svg>
+        LinkedIn
+      </a>
+      <a
+        href={withBase(PROFILE.resumePath)}
+        download
+        class={resumeButtonClass}
+      >
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3v10m0 0 4-4m-4 4-4-4M5 19h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Download resume
       </a>
     </div>
   </section>
@@ -55,14 +96,30 @@ const featuredProjects = publishedProjects.filter(({ data }) => data.featured);
   <section class="mt-16 space-y-6">
     <div class="flex items-end justify-between gap-4">
       <div>
-        <p class="text-sm text-[var(--accent)]">Featured projects</p>
-        <h2 class="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--text)] sm:text-4xl">
+        <p class="home-kicker text-sm text-[var(--accent)]">Featured projects</p>
+        <h2 class="home-title mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--text)] sm:text-4xl">
           Spark ETL and lakehouse work that maps to real jobs
         </h2>
       </div>
-      <a class="text-sm text-[var(--accent)] hover:text-[var(--accent-strong)]" href={withBase("/projects/")}>
-        View all
-      </a>
+      <div class="flex items-center gap-3">
+        <a
+          class="text-sm text-[var(--accent)] hover:text-[var(--accent-strong)]"
+          href={withBase("/projects/")}
+        >
+          View all
+        </a>
+        <a
+          class="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/40 hover:bg-[var(--surface-strong)]"
+          href="https://github.com/Nikhil5hetty"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 2C6.48 2 2 6.48 2 12c0 4.41 2.87 8.16 6.84 9.49.5.09.68-.22.68-.48 0-.24-.01-.87-.01-1.71-2.78.61-3.37-1.34-3.37-1.34-.46-1.18-1.12-1.49-1.12-1.49-.92-.63.07-.62.07-.62 1.02.07 1.56 1.05 1.56 1.05.9 1.55 2.35 1.1 2.93.84.09-.66.35-1.1.63-1.35-2.22-.25-4.56-1.11-4.56-4.93 0-1.09.39-1.98 1.04-2.68-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.02a9.56 9.56 0 0 1 2.5-.34c.85 0 1.71.11 2.5.34 1.9-1.29 2.74-1.02 2.74-1.02.56 1.42.21 2.47.11 2.73.64.7 1.03 1.59 1.03 2.68 0 3.83-2.34 4.68-4.57 4.92.36.31.69.93.69 1.88 0 1.36-.01 2.45-.01 2.78 0 .26.18.57.69.47A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10Z" fill="currentColor"/>
+          </svg>
+          GitHub
+        </a>
+      </div>
     </div>
 
     <div class="grid gap-5 md:grid-cols-3">
@@ -81,8 +138,8 @@ const featuredProjects = publishedProjects.filter(({ data }) => data.featured);
   <section class="mt-16 space-y-6">
     <div class="flex items-end justify-between gap-4">
       <div>
-        <p class="text-sm text-[var(--accent)]">Recent writing</p>
-        <h2 class="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--text)] sm:text-4xl">
+        <p class="home-kicker text-sm text-[var(--accent)]">Recent writing</p>
+        <h2 class="home-title mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--text)] sm:text-4xl">
           Practical notes on Spark, ETL, and data delivery
         </h2>
       </div>

@@ -1,0 +1,119 @@
+---
+title: "Reconciling Late Arriving Events in Spark"
+description: "How we handled out-of-order Assignment, AssignmentAttempt, and SectionLearner events with a retryable reconciliation pattern."
+date: 2023-04-18
+featured: false
+tags:
+  - advanced
+  - spark
+  - reconciliation
+  - streaming
+  - data-engineering
+---
+
+In event-driven data pipelines, the order of arrival is not always the order of business
+truth.
+
+That became important in a workflow built around `Assignment`, `AssignmentAttempt`, and
+`SectionLearner` events. The downstream model expected the attempt to be validated against the
+assignment and the learner context, but reality was messier:
+
+- an `AssignmentAttempt` could arrive before the corresponding `Assignment`
+- a matching `SectionLearner` record might not exist yet for that attempt
+- if we wrote the record immediately, we risked losing the useful part of the event
+
+The problem was not the join itself. The problem was what to do when the join could not be
+completed yet.
+
+This approach follows the same reconciliation idea described in Databricks' official blog post on
+late arriving dimensions:
+
+- [Handling Late Arriving Dimensions Using a Reconciliation Pattern](https://www.databricks.com/blog/2020/12/15/handling-late-arriving-dimensions-using-a-reconciliation-pattern.html)
+
+## Why this matters
+
+If you consume stream data as if it is perfectly ordered, you eventually lose records or force bad
+defaults into the model.
+
+In our case, that meant:
+
+- the attempt existed, but the assignment metadata was missing
+- the learner context was incomplete
+- a naive left join would produce nulls that looked like bad data instead of unfinished data
+
+We did not want to discard those events.
+We wanted to quarantine them, retry them, and only promote them once the missing dependencies had
+arrived.
+
+## The pattern we used
+
+The approach was a reconciliation flow:
+
+1. Ingest the event into the main pipeline.
+2. Try to resolve the related records.
+3. If the related `Assignment` or `SectionLearner` record is missing, mark the event as unresolved.
+4. Write that unresolved record into a reconciliation store.
+5. Retry the reconciliation later when the missing data arrives.
+
+This way, the stream does not stop just because one reference is late.
+The driver keeps the record in the reconciliation path and the retry job keeps checking for a match.
+
+## How the logic worked
+
+The core logic was straightforward:
+
+- `AssignmentAttempt` was the triggering event
+- `Assignment` provided the assignment-level context
+- `SectionLearner` provided the learner-specific context
+
+When an attempt arrived, we tried to enrich it immediately.
+If the assignment was missing, the record stayed unresolved.
+If the assignment existed but the learner relationship was missing, it also stayed unresolved.
+Only when both sides were present did the event move forward as a complete record.
+
+That distinction matters.
+Missing data is not always invalid data. Sometimes it is just early data.
+
+## Why reconciliation worked better than dropping records
+
+The reconciliation pattern gave us three things:
+
+- **data safety**: the attempt was never lost
+- **operational clarity**: unresolved records were visible in a retry store
+- **eventual correctness**: once the late record arrived, the pipeline could finish the join
+
+This was especially important because the late-arriving record often carried the exact context needed
+to make the attempt usable downstream.
+
+## What the retry loop did
+
+The retry process periodically scanned the unresolved set and reprocessed records that were still
+eligible.
+
+If `Assignment` had arrived since the first pass, the attempt could now be resolved.
+If `SectionLearner` had arrived late, the same record could be promoted on the next retry.
+
+That meant the pipeline behaved like a controlled wait-and-retry system instead of a brittle one-shot
+join.
+
+## Practical lesson
+
+The main lesson was that late-arriving events should often be treated as incomplete, not failed.
+
+For pipelines like this, I now think in terms of:
+
+- can the record be resolved now
+- if not, should it be held for reconciliation
+- what is the retry condition
+- how do we avoid losing business-critical events
+
+That mindset is what keeps the driver in the reconciliation flow until the event can be safely
+completed.
+
+## Closing thought
+
+This is one of those cases where stream processing needs a small amount of memory about the past.
+
+The pipeline is not just processing data.
+It is waiting for the missing piece, reconciling the record, and then letting the event continue once
+the full context is available.

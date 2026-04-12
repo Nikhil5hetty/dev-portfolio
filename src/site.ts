@@ -6,6 +6,7 @@ export const SITE = {
   url: "https://Nikhil5hetty.github.io/dev-portfolio",
   resumePath: "/resume/Nikhil_Resume_Final.pdf",
   email: "05nikhilshetty@gmail.com",
+  linkedin: "https://www.linkedin.com/in/nikhil5hetty/",
 };
 
 export const NAV_LINKS = [
@@ -17,5 +18,6 @@ export const NAV_LINKS = [
 
 export const SOCIAL_LINKS = [
   { label: "GitHub", href: "https://github.com/Nikhil5hetty" },
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/nikhil5hetty/" },
   { label: "Email", href: "mailto:05nikhilshetty@gmail.com" },
 ];

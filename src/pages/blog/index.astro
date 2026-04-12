@@ -8,15 +8,15 @@ import { SITE } from "@/site";
 const posts = sortByDateDesc((await getCollection("posts")).filter(isPublished));
 ---
 
-<BaseLayout title={`Blog | ${SITE.author}`} description="Notes, essays, and technical writeups.">
+<BaseLayout title={`Blog | ${SITE.author}`} description="Chronological notes, essays, and technical writeups.">
   <section class="space-y-4">
     <p class="text-xs uppercase tracking-[0.28em] text-[var(--accent)]">Blog</p>
     <h1 class="text-5xl font-semibold tracking-[-0.04em] text-[var(--text)] sm:text-6xl">
-      Writing and notes
+      Writing archive
     </h1>
     <p class="max-w-3xl text-lg leading-8 text-[var(--muted)] sm:text-[1.15rem]">
-      This will be the home for technical posts, learning notes, and practical reflections from
-      building data platforms.
+      A chronological archive of technical posts, learning notes, and practical reflections from
+      building Spark and data platform work over time.
     </p>
   </section>
 

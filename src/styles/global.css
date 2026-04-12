@@ -122,7 +122,14 @@ a {
 
 .prose-custom {
   color: var(--text);
-  font-size: 1.04rem;
+  font-size: 1.5rem;
+  line-height: 1.85;
+  font-family:
+    "Iowan Old Style",
+    "Palatino Linotype",
+    "Book Antiqua",
+    Georgia,
+    serif;
 }
 
 .prose-custom :is(p, li) {
@@ -143,32 +150,32 @@ a {
 }
 
 .prose-custom h2 {
-  margin-top: 2.75rem;
+  margin-top: 2.5rem;
   margin-bottom: 0.85rem;
   padding-bottom: 0.35rem;
   border-bottom: 1px solid var(--line);
-  font-size: 1.5rem;
+  font-size: 1.65rem;
   line-height: 1.25;
 }
 
 .prose-custom h3 {
   margin-top: 2rem;
   margin-bottom: 0.65rem;
-  font-size: 1.18rem;
+  font-size: 1.3rem;
   line-height: 1.35;
 }
 
 .prose-custom h4 {
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
-  font-size: 1.04rem;
+  font-size: 1.05rem;
   line-height: 1.35;
 }
 
 .prose-custom p,
 .prose-custom ul,
 .prose-custom ol {
-  margin-bottom: 1rem;
+  margin-bottom: 1.05rem;
 }
 
 .prose-custom img {
@@ -188,4 +195,99 @@ a {
 
 .prose-custom li + li {
   margin-top: 0.35rem;
+}
+
+.home-hero {
+  font-family:
+    "Inter",
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
+.home-hero h1,
+.home-title {
+  font-family:
+    "Space Grotesk",
+    "Inter",
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  letter-spacing: -0.045em;
+}
+
+.home-kicker {
+  font-family:
+    "IBM Plex Mono",
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    Menlo,
+    monospace;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.experience-card {
+  font-family:
+    "Source Serif 4",
+    Georgia,
+    "Times New Roman",
+    serif;
+}
+
+.about-hero-copy {
+  font-family:
+    "Source Serif 4",
+    Georgia,
+    "Times New Roman",
+    serif;
+}
+
+.experience-company,
+.experience-section-title {
+  font-family:
+    "Space Grotesk",
+    "Inter",
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  letter-spacing: -0.04em;
+}
+
+.experience-meta,
+.experience-kicker {
+  font-family:
+    "IBM Plex Mono",
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    Menlo,
+    monospace;
+}
+
+.experience-copy {
+  font-size: 1.16rem;
+  line-height: 1.95;
+  letter-spacing: 0.01em;
+}
+
+.experience-company {
+  font-size: 2.15rem;
+  line-height: 1.1;
+}
+
+.experience-section-title {
+  font-size: clamp(2.7rem, 3vw, 3.45rem);
+  line-height: 1.05;
+}
+
+.experience-meta {
+  font-size: 0.92rem;
 }

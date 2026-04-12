@@ -1,0 +1,266 @@
+---
+title: "How Spark Joins Work Internally"
+description: "A practical guide to Spark join planning, physical join strategies, shuffles, skew, and how to read the plan when performance matters."
+date: 2021-08-22
+featured: false
+tags:
+  - intermediate
+  - spark
+  - joins
+  - shuffle
+  - performance
+---
+
+import { withBase } from "@/lib/withBase";
+
+Joins are where Spark’s execution model becomes visible.
+
+On paper, a join is just a way to combine rows from two datasets.
+Inside Spark, though, a join is a physical decision about how data should move, where it should be
+materialized, and which executor should do the work.
+
+That is why join performance often tells you more about the pipeline than the SQL itself.
+
+<figure class="my-8">
+  <img
+    src={withBase("/diagrams/spark-join-strategies.svg")}
+    alt="Spark join strategies diagram showing broadcast hash join, sort-merge join, and shuffle hash join"
+    class="block w-full rounded-[1.5rem] border border-[var(--line)] bg-[var(--surface-strong)] shadow-[var(--shadow)]"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption class="mt-3 text-sm leading-6 text-[var(--muted)]">
+    A visual summary of how Spark chooses between broadcast, sort-merge, and shuffle-based joins.
+  </figcaption>
+</figure>
+
+## Logical versus physical work
+
+The SQL or DataFrame code describes the logical join:
+
+- inner join
+- left join
+- right join
+- full outer join
+- semi join
+- anti join
+
+Spark then has to turn that logical request into a physical execution plan.
+
+At that stage it answers questions like:
+
+- can one side be broadcast
+- should both sides be shuffled by key
+- is the join key suitable for hashing
+- will sorting produce a better plan
+- is the data skewed enough to make the default strategy inefficient
+
+The join operator you write is not always the join operator Spark executes.
+
+## Why joins get expensive
+
+A join becomes expensive when Spark cannot keep the matching records local to the same partition.
+
+If the relevant rows already live together, Spark can process the work without much movement.
+If they do not, Spark has to reshuffle the data across the cluster first.
+
+That cost shows up as:
+
+- network transfer
+- serialization and deserialization
+- disk spill
+- longer task runtime
+- extra stage boundaries
+
+The bigger the shuffle, the more the join dominates the job.
+
+## The main join strategies
+
+### Broadcast hash join
+
+Broadcast hash join is usually the fastest option when one side of the join is small enough to fit
+comfortably in memory.
+
+Spark copies the small dataset to every executor, so each worker can join locally against the larger
+side.
+
+This avoids a shuffle on the small side and is often the best choice for dimension-table style
+lookups.
+
+It works well when:
+
+- one table is much smaller than the other
+- the small side fits in memory on each executor
+- the join is an equi-join
+- the broadcast threshold is not exceeded
+
+### Sort-merge join
+
+Sort-merge join is the common large-table strategy in Spark.
+
+Spark shuffles both datasets by the join key, sorts the partitions, and then merges matching rows.
+
+It is more expensive than broadcasting, but it scales well when both sides are large and roughly
+similar in size.
+
+It is often the stable choice when:
+
+- both tables are large
+- the join is an equi-join
+- broadcasting is not realistic
+- you want predictable behavior at scale
+
+### Shuffle hash join
+
+Shuffle hash join is another hash-based strategy where Spark partitions both sides by key and builds
+a hash table on the smaller partition.
+
+It can be useful in some workloads, but in practice Spark often prefers broadcast hash join or
+sort-merge join depending on the data size, distribution, and planner settings.
+
+The important point is that hash-based joins depend heavily on memory and data balance.
+
+### Broadcast nested loop join
+
+Broadcast nested loop join is more of a fallback than a preferred plan.
+
+Spark can use it when the join condition is not a simple equi-join or when it has no better way to
+combine the data.
+
+It is usually much more expensive than the hash or sort-based strategies, so if you see this in a
+plan, it is worth understanding why Spark could not use a cheaper operator.
+
+### Cartesian join
+
+A Cartesian join combines every row from one side with every row from the other side.
+
+This is usually a sign that the query is either intentionally generating all pairwise combinations
+or missing a join condition.
+
+In most production workloads, a Cartesian join is something to avoid rather than tune.
+
+## What actually creates a shuffle
+
+Shuffling is Spark’s way of moving records so that matching keys end up together.
+
+Joins trigger shuffles when the data is not already partitioned in a way that supports local
+matching.
+
+That matters because a shuffle changes the cost model of the job:
+
+- more partitions do not automatically mean less work
+- a badly distributed key can still create hot partitions
+- a larger cluster can hide the symptom without fixing the cause
+
+The expensive part is not the join syntax.
+The expensive part is the data movement.
+
+## Jobs, stages, and tasks
+
+Spark’s execution hierarchy helps explain join behavior:
+
+- a **job** starts when an action is triggered
+- a **stage** is a set of tasks that can run without a shuffle barrier
+- a **task** is the unit of work for a single partition
+
+Joins often create stage boundaries because a shuffle is usually required between the two sides of
+the join.
+
+That is why a join-heavy pipeline can look simple in code but still generate a long execution plan.
+
+## How Spark chooses a strategy
+
+Spark does not pick a join operator randomly.
+It uses metadata, statistics, join type, and planner rules to decide.
+
+The most important inputs are:
+
+- table size estimates
+- available statistics
+- join type
+- whether a side can be broadcast
+- executor memory
+- shuffle configuration
+- data distribution and skew
+
+If Spark knows one side is small, it will usually try to broadcast it.
+If both sides are large, it leans toward sort-merge join.
+If the join condition is not a clean equi-join, it may fall back to a nested loop style plan.
+
+That is why collecting statistics and understanding your data shape is so important.
+
+## Why skew changes everything
+
+Skew means some join keys are much more common than others.
+
+When skew is present, one partition can become much larger than the rest, and a single task ends up
+doing a disproportionate amount of work.
+
+In that case, a join can look healthy in the code and still perform badly in production.
+
+Common symptoms are:
+
+- one task taking much longer than the others
+- spill on only a few executors
+- uneven shuffle partition sizes
+- an entire stage waiting on a small number of hot keys
+
+This is why adding more cluster size does not always help.
+Sometimes the issue is not capacity.
+It is data distribution.
+
+## How I inspect join plans
+
+When I want to understand a join, I usually check:
+
+```python
+df.explain("formatted")
+```
+
+That helps reveal:
+
+- which physical join Spark picked
+- whether there was a broadcast
+- where the shuffle happened
+- how many stages the plan introduced
+
+In the Spark UI, I also look at:
+
+- shuffle read and write
+- task duration
+- spill metrics
+- skewed partitions
+- stage boundaries
+
+Those signals make it much easier to see whether the plan is healthy or just barely working.
+
+## How to think about join choice
+
+The question is not “which join is best?”
+The real question is “which join matches this data shape and business constraint?”
+
+My rough decision pattern is:
+
+- if one side is small and stable, prefer broadcast hash join
+- if both sides are large and equi-join keys are clean, sort-merge join is usually the safer choice
+- if the join keys are badly skewed, fix the skew before assuming more cluster size will solve it
+- if Spark falls back to nested loop behavior, check whether the query can be rewritten
+
+That mindset is more useful than memorizing join names.
+
+## The practical takeaway
+
+Spark joins are not just relational operations.
+They are execution plans that reflect how the cluster will move and process data.
+
+Once you understand broadcast, sort-merge, shuffle hash, shuffling, and stage boundaries, it becomes
+much easier to reason about pipeline performance.
+
+That is the real value of reading join plans carefully:
+
+- you can explain where time is going
+- you can see why a query is expensive
+- you can decide whether to rewrite the query, change the data layout, or change the cluster
+
+In Spark, the join is rarely the whole problem.
+It is the place where the real problem becomes visible.

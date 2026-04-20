@@ -4,7 +4,7 @@ export const SITE = {
   description:
     "Projects, writing, and portfolio notes on Spark ETL, Databricks Lakehouse, streaming, and production data engineering.",
   url: "https://Nikhil5hetty.github.io/dev-portfolio",
-  resumePath: "/resume/Nikhil_Resume_Final.pdf",
+  resumePath: "/resume/Nikhil_Shetty.pdf",
   email: "05nikhilshetty@gmail.com",
   linkedin: "https://www.linkedin.com/in/nikhil5hetty/",
 };

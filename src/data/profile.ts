@@ -5,7 +5,7 @@ export const PROFILE = {
     "Seasoned data engineer with 8+ years of experience designing end-to-end solutions across data engineering, machine learning, and backend systems. I focus on Spark pipelines, lakehouse architecture, and production-grade delivery across cloud platforms and modern data infrastructure.",
   currentStudy: "Master’s in Computer Science | Bern, Switzerland",
   location: "Bern, Switzerland",
-  resumePath: "/resume/Nikhil_Resume_Final.pdf",
+  resumePath: "/resume/Nikhil_Shetty.pdf",
   email: "05nikhilshetty@gmail.com",
   impactCards: [
     { value: "82%", label: "pipeline latency reduction" },

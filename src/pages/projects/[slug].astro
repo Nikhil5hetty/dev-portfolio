@@ -16,135 +16,112 @@ export async function getStaticPaths() {
 
 const { project } = Astro.props;
 const { Content } = await project.render();
-
-const sections = [
-  { label: "Challenge", href: "#challenge" },
-  { label: "Architecture", href: "#architecture" },
-  { label: "Scale", href: "#scale" },
-  { label: "Outcome", href: "#outcome" },
-  { label: "Stack", href: "#stack" },
-  { label: "Implementation", href: "#implementation" },
-  { label: "Lessons", href: "#lessons" },
-];
+const tags = project.data.tags ?? [];
 ---
 
 <BaseLayout title={`${project.data.title} | ${SITE.author}`} description={project.data.description}>
-  <article class="space-y-8">
-    <section class="panel rounded-[2rem] p-7 sm:p-10">
-      <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-        <div class="max-w-3xl">
-          <p class="text-xs uppercase tracking-[0.3em] text-[var(--accent)]">
-            Projects · {project.data.category}
-          </p>
-          <h1 class="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[var(--text)] sm:text-5xl">
-            {project.data.title}
-          </h1>
-          <p class="mt-4 text-lg leading-8 text-[var(--muted)]">{project.data.description}</p>
-        </div>
+  <article class="project-article mx-auto w-full">
+    <header class="blog-header space-y-6">
+      <div class="flex flex-wrap items-center gap-3 text-sm text-[var(--muted)]">
+        <span class="blog-kicker">Project</span>
+        <span aria-hidden="true">•</span>
+        <span>{project.data.category}</span>
+        <span aria-hidden="true">•</span>
+        <time datetime={project.data.date.toISOString()}>{formatDate(project.data.date)}</time>
+        <span aria-hidden="true">•</span>
+        <span class="uppercase tracking-[0.14em]">{project.data.status}</span>
+      </div>
 
-        <div class="flex flex-wrap gap-3 lg:justify-end">
-          {project.data.repo && (
-            <a
-              href={project.data.repo}
-              target="_blank"
-              rel="noreferrer"
-              class="inline-flex rounded-full border border-[var(--line)] px-5 py-3 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/40 hover:bg-[var(--surface-strong)]"
-            >
-              View code
-            </a>
+      <h1 class="blog-title project-title">
+        {project.data.title}
+      </h1>
+
+      <p class="blog-dek project-dek">
+        {project.data.description}
+      </p>
+
+      <div class="flex flex-wrap items-center gap-3 pt-1">
+        {project.data.repo && (
+          <a
+            href={project.data.repo}
+            target="_blank"
+            rel="noreferrer"
+            class="inline-flex rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 py-2 text-sm font-medium text-[var(--text)] transition hover:border-[var(--accent)]/35 hover:bg-[var(--surface-strong)]"
+          >
+            View code
+          </a>
+        )}
+
+        {project.data.link && (
+          <a
+            href={project.data.link}
+            target="_blank"
+            rel="noreferrer"
+            class="inline-flex rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 py-2 text-sm font-medium text-[var(--text)] transition hover:border-[var(--accent)]/35 hover:bg-[var(--surface-strong)]"
+          >
+            Open project
+          </a>
+        )}
+      </div>
+
+      {(tags.length > 0 || project.data.stack.length > 0) && (
+        <div class="space-y-3 pt-2">
+          {tags.length > 0 && (
+            <ul class="flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <li class="rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-[var(--muted)]">
+                  {tag}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {project.data.stack.length > 0 && (
+            <p class="project-stackline">
+              <span>Stack</span>
+              {project.data.stack.join(" · ")}
+            </p>
           )}
         </div>
-      </div>
+      )}
+    </header>
 
-      <div class="mt-8 rounded-[1.75rem] border border-[var(--line)] bg-[var(--surface-strong)] p-5">
-        <p class="text-xs uppercase tracking-[0.3em] text-[var(--accent)]">Jump to section</p>
-        <div class="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {sections.map((section) => (
-            <a
-              href={section.href}
-              class="group flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-[var(--muted)] transition hover:bg-[var(--surface)] hover:text-[var(--text)]"
-            >
-              <span class="text-[var(--accent)] transition group-hover:translate-x-0.5">↳</span>
-              <span>{section.label}</span>
-            </a>
-          ))}
-        </div>
-      </div>
+    <section class="project-summary" aria-label="Project summary">
+      <article class="project-summary-item">
+        <p class="project-summary-label">Challenge</p>
+        <p class="project-summary-value">{project.data.challenge}</p>
+      </article>
+      <article class="project-summary-item">
+        <p class="project-summary-label">Architecture</p>
+        <p class="project-summary-value">{project.data.architecture}</p>
+      </article>
+      <article class="project-summary-item">
+        <p class="project-summary-label">Scale</p>
+        <p class="project-summary-value">{project.data.scale}</p>
+      </article>
+      <article class="project-summary-item">
+        <p class="project-summary-label">Outcome</p>
+        <p class="project-summary-value">{project.data.outcome}</p>
+      </article>
     </section>
 
-    <section class="panel rounded-[2rem] p-7 sm:p-10">
-      <article class="prose-custom max-w-none">
-        <section id="challenge" class="scroll-mt-28">
-          <h2>Challenge</h2>
-          <p>{project.data.challenge}</p>
-          <p>
-            The main goal was to keep the pipeline simple enough to run locally while still showing the
-            kind of issues that appear in real production ETL: repeated rows, duplicate keys, and joins
-            that can create ambiguous output if the columns are not controlled carefully.
-          </p>
-        </section>
+    {project.data.diagram && (
+      <figure class="project-hero-figure">
+        <img
+          src={withBase(project.data.diagram)}
+          alt={`${project.data.title} architecture diagram`}
+          loading="lazy"
+          decoding="async"
+        />
+      </figure>
+    )}
 
-        <section id="architecture" class="scroll-mt-28">
-          <h2>Architecture</h2>
-          <p>{project.data.architecture}</p>
-          <p>
-            The implementation is intentionally layered. Raw input lands first, transformations are kept
-            explicit, and each output layer has a distinct purpose so the notebook and CLI both reflect
-            the same design.
-          </p>
-          {project.data.diagram && (
-            <figure>
-              <img
-                src={withBase(project.data.diagram)}
-                alt={`${project.data.title} architecture diagram`}
-                loading="lazy"
-                decoding="async"
-              />
-            </figure>
-          )}
-        </section>
-
-        <section id="scale" class="scroll-mt-28">
-          <h2>Scale</h2>
-          <p>{project.data.scale}</p>
-          <p>
-            Even though the sample datasets are small, the logic is shaped like a larger system:
-            validation happens before summarization, ownership is resolved before grouping, and outputs
-            are written in a way that makes reruns predictable.
-          </p>
-        </section>
-
-        <section id="outcome" class="scroll-mt-28">
-          <h2>Outcome</h2>
-          <p>{project.data.outcome}</p>
-          <p>
-            The result is a portfolio project that is easy to explain end to end: what the raw data
-            looked like, how it was cleaned, what each output layer means, and how the final metrics are
-            produced.
-          </p>
-        </section>
-
-        <section id="stack" class="scroll-mt-28">
-          <h2>Stack</h2>
-          <div class="not-prose mt-4 flex flex-wrap gap-2">
-            {project.data.stack.map((item) => (
-              <span class="rounded-full border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-1 text-xs text-[var(--muted)]">
-                {item}
-              </span>
-            ))}
-          </div>
-        </section>
-
-        <section id="implementation" class="scroll-mt-28">
-          <h2>Implementation</h2>
-          <p>
-            {formatDate(project.data.date)} · {project.data.status}
-          </p>
-          <Content />
-        </section>
+    <div class="project-body">
+      <div class="prose-custom max-w-none">
+        <Content />
 
         {project.data.lessons.length > 0 && (
-          <section id="lessons" class="scroll-mt-28">
+          <section class="scroll-mt-28">
             <h2>Lessons learned</h2>
             <ul>
               {project.data.lessons.map((lesson) => (
@@ -153,7 +130,7 @@ const sections = [
             </ul>
           </section>
         )}
-      </article>
-    </section>
+      </div>
+    </div>
   </article>
 </BaseLayout>

@@ -1,34 +1,59 @@
 ---
 import { getCollection } from "astro:content";
 import BaseLayout from "@/layouts/BaseLayout.astro";
-import EntryCard from "@/components/EntryCard.astro";
 import { isPublished, sortByDateDesc } from "@/lib/content";
+import { formatDate } from "@/lib/formatDate";
+import { withBase } from "@/lib/withBase";
 import { SITE } from "@/site";
 
 const projects = sortByDateDesc((await getCollection("projects")).filter(isPublished));
 ---
 
 <BaseLayout title={`Projects | ${SITE.author}`} description="Selected data engineering projects.">
-  <section class="space-y-4">
-    <p class="text-xs uppercase tracking-[0.28em] text-[var(--accent)]">Projects</p>
-    <h1 class="text-5xl font-semibold tracking-[-0.04em] text-[var(--text)] sm:text-6xl">
-      Selected work
-    </h1>
-    <p class="max-w-3xl text-lg leading-8 text-[var(--muted)] sm:text-[1.15rem]">
-      These case studies are written for hiring managers: the problem, architecture, scale, and
-      measurable outcome are shown up front.
-    </p>
-  </section>
+  <article class="project-article project-index mx-auto w-full">
+    <header class="blog-header space-y-6">
+      <div class="flex flex-wrap items-center gap-3 text-sm text-[var(--muted)]">
+        <span class="blog-kicker">Projects</span>
+        <span aria-hidden="true">•</span>
+        <span>Engineering notes</span>
+      </div>
 
-  <section class="mt-10 grid gap-5 md:grid-cols-2">
-    {projects.map((project) => (
-      <EntryCard
-        href={`/projects/${project.slug}/`}
-        title={project.data.title}
-        description={project.data.description}
-        meta={`${project.data.category} · ${project.data.status}`}
-        tags={project.data.stack.slice(0, 4)}
-      />
-    ))}
-  </section>
+      <h1 class="blog-title project-title">
+        Long-form project writing
+      </h1>
+
+      <p class="blog-dek project-dek">
+        These project entries are written like technical articles: the problem, the system shape, the
+        implementation choices, and the tradeoffs are all visible in one reading flow.
+      </p>
+    </header>
+
+    <section class="project-list" aria-label="Projects archive">
+      {projects.map((project) => (
+        <article class="project-list-item">
+          <div class="flex flex-wrap items-center gap-3 text-sm text-[var(--muted)]">
+            <span class="blog-kicker text-[0.68rem]">{project.data.category}</span>
+            <span aria-hidden="true">•</span>
+            <time datetime={project.data.date.toISOString()}>{formatDate(project.data.date)}</time>
+            <span aria-hidden="true">•</span>
+            <span class="uppercase tracking-[0.14em]">{project.data.status}</span>
+          </div>
+
+          <h2 class="project-list-title">
+            <a href={withBase(`/projects/${project.slug}/`)} class="transition hover:text-[var(--accent)]">
+              {project.data.title}
+            </a>
+          </h2>
+
+          <p class="project-list-dek">{project.data.description}</p>
+
+          <div class="project-list-meta">
+            {project.data.stack.slice(0, 5).map((item) => (
+              <span class="project-list-tag">{item}</span>
+            ))}
+          </div>
+        </article>
+      ))}
+    </section>
+  </article>
 </BaseLayout>

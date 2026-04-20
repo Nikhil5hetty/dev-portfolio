@@ -70,19 +70,21 @@
   <g filter="url(#shadow)">
     <rect x="705" y="166" width="430" height="160" rx="26" fill="#F6FAFF" stroke="#B9CBE4"/>
     <text x="735" y="212" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">Why broadcast is fast</text>
-    <text x="735" y="242" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">No shuffle on the small side, so matching happens locally on each executor.</text>
-    <text x="735" y="272" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">Best when one table is truly small and stable enough to fit in memory.</text>
+    <text x="735" y="242" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="15">No shuffle on the small side.</text>
+    <text x="735" y="268" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="15">Matching stays local on each executor.</text>
+    <text x="735" y="294" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="15">Best when the small table fits in memory.</text>
   </g>
 
   <g filter="url(#shadow)">
     <rect x="705" y="344" width="430" height="160" rx="26" fill="#F6FAFF" stroke="#B9CBE4"/>
     <text x="735" y="390" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">Why sort-merge is common</text>
-    <text x="735" y="420" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">Both sides are shuffled by key, sorted, and merged partition by partition.</text>
-    <text x="735" y="450" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">It is the safer choice for large equi-joins where broadcast is not realistic.</text>
+    <text x="735" y="420" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="15">Shuffle both sides by join key.</text>
+    <text x="735" y="446" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="15">Sort the partitions, then merge them.</text>
+    <text x="735" y="472" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="15">Safer for large equi-joins.</text>
   </g>
 
   <g filter="url(#shadow)">
     <rect x="705" y="522" width="430" height="72" rx="22" fill="#F6FAFF" stroke="#B9CBE4"/>
-    <text x="735" y="566" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">Skew and shuffle size decide whether the plan stays efficient or becomes expensive.</text>
+    <text x="735" y="556" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="15">Skew and shuffle size decide whether the join stays healthy.</text>
   </g>
 </svg>

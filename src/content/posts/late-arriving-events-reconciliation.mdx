@@ -11,6 +11,8 @@ tags:
   - data-engineering
 ---
 
+import { withBase } from "@/lib/withBase";
+
 In event-driven data pipelines, the order of arrival is not always the order of business
 truth.
 
@@ -44,6 +46,19 @@ In our case, that meant:
 We did not want to discard those events.
 We wanted to quarantine them, retry them, and only promote them once the missing dependencies had
 arrived.
+
+<figure class="my-10">
+  <img
+    src={withBase("/diagrams/late-arriving-events-flow.svg")}
+    alt="Late arriving events flow showing AssignmentAttempt entering reconciliation until Assignment and SectionLearner arrive"
+    class="block w-full rounded-[1.5rem] border border-[var(--line)] bg-[var(--surface-strong)] shadow-[var(--shadow)]"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption class="mt-3 text-sm leading-6 text-[var(--muted)]">
+    Diagram by author. Reference: <a href="https://www.databricks.com/blog/2020/12/15/handling-late-arriving-dimensions-using-a-reconciliation-pattern.html" target="_blank" rel="noreferrer">Handling Late Arriving Dimensions Using a Reconciliation Pattern</a>.
+  </figcaption>
+</figure>
 
 ## The pattern we used
 
@@ -95,6 +110,19 @@ If `SectionLearner` had arrived late, the same record could be promoted on the n
 
 That meant the pipeline behaved like a controlled wait-and-retry system instead of a brittle one-shot
 join.
+
+<figure class="my-10">
+  <img
+    src={withBase("/diagrams/reconciliation-retry-loop.svg")}
+    alt="Retry loop showing unresolved event storage, retry job, resolution, and re-queue path"
+    class="block w-full rounded-[1.5rem] border border-[var(--line)] bg-[var(--surface-strong)] shadow-[var(--shadow)]"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption class="mt-3 text-sm leading-6 text-[var(--muted)]">
+    Diagram by author. References: <a href="https://www.databricks.com/blog/2020/12/15/handling-late-arriving-dimensions-using-a-reconciliation-pattern.html" target="_blank" rel="noreferrer">Databricks reconciliation pattern</a> and <a href="https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html" target="_blank" rel="noreferrer">Spark Structured Streaming Programming Guide</a>.
+  </figcaption>
+</figure>
 
 ## Practical lesson
 

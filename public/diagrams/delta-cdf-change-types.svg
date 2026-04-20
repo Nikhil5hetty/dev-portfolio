@@ -1,0 +1,61 @@
+<svg width="1200" height="700" viewBox="0 0 1200 700" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Delta Change Data Feed change types diagram">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FBFF"/>
+      <stop offset="1" stop-color="#EEF5FF"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="96" y1="100" x2="1104" y2="620" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0369A1"/>
+      <stop offset="1" stop-color="#0F4C81"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0F172A" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="700" rx="34" fill="url(#bg)"/>
+  <rect x="24" y="24" width="1152" height="652" rx="28" fill="#FFFFFF" fill-opacity="0.84" stroke="#C6D4E6"/>
+
+  <text x="60" y="82" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="700">What Delta CDF Emits</text>
+  <text x="60" y="116" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="18">the stream sees change events instead of full snapshots</text>
+  <text x="60" y="142" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="18">and merge logic decides how the target should react</text>
+
+  <g filter="url(#shadow)">
+    <rect x="70" y="230" width="220" height="130" rx="24" fill="#F6FAFF" stroke="#B9CBE4"/>
+    <text x="126" y="282" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">Source table</text>
+    <text x="112" y="318" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">business rows keep changing</text>
+  </g>
+
+  <path d="M290 295H372" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M372 295L355 285M372 295L355 305" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="392" y="170" width="300" height="250" rx="24" fill="#FFF6D7" stroke="#E6D594"/>
+    <text x="452" y="220" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">Change feed</text>
+    <text x="438" y="264" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">insert</text>
+    <text x="438" y="296" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">update_preimage</text>
+    <text x="438" y="328" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">update_postimage</text>
+    <text x="438" y="360" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">delete</text>
+    <text x="438" y="392" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">commit version</text>
+    <text x="438" y="416" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">and timestamp</text>
+  </g>
+
+  <path d="M692 295H774" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M774 295L757 285M774 295L757 305" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="794" y="170" width="300" height="250" rx="24" fill="#E8FFF3" stroke="#B7E2CC"/>
+    <text x="854" y="214" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="700">Streaming merge</text>
+    <text x="838" y="258" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">insert new business rows</text>
+    <text x="838" y="288" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">update existing state</text>
+    <text x="838" y="318" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">delete or mark inactive</text>
+    <text x="838" y="348" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">checkpoint progress</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="392" y="500" width="702" height="110" rx="24" fill="#F4EDFF" stroke="#CDC0EC"/>
+    <text x="432" y="546" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">Result</text>
+    <text x="432" y="576" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">process only the delta, not the whole table</text>
+    <text x="432" y="602" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">and still keep a correct current-state target</text>
+  </g>
+</svg>

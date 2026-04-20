@@ -92,8 +92,7 @@ This gives you an incremental pipeline that is both efficient and auditable.
     class="w-full rounded-[1.75rem] border border-[var(--line)] bg-[var(--surface-strong)] shadow-[var(--shadow)]"
   />
   <figcaption class="mt-3 text-sm leading-6 text-[var(--muted)]">
-    The source Delta table emits row-level changes through CDF, Structured Streaming consumes the
-    feed, and the target table is updated incrementally through merge logic.
+    Diagram by author. References: <a href="https://docs.databricks.com/en/delta/delta-change-data-feed.html" target="_blank" rel="noreferrer">Databricks Delta Change Data Feed</a> and <a href="https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html" target="_blank" rel="noreferrer">Spark Structured Streaming Programming Guide</a>.
   </figcaption>
 </figure>
 
@@ -145,6 +144,19 @@ Conceptually, that looks like this:
 
 The stream produces change records with metadata that identifies the type of change and the commit
 version.
+
+<figure class="my-10">
+  <img
+    src={withBase("/diagrams/delta-cdf-change-types.svg")}
+    alt="Delta Change Data Feed change types flowing into streaming merge logic"
+    class="w-full rounded-[1.75rem] border border-[var(--line)] bg-[var(--surface-strong)] shadow-[var(--shadow)]"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption class="mt-3 text-sm leading-6 text-[var(--muted)]">
+    Diagram by author. References: <a href="https://docs.databricks.com/en/delta/delta-change-data-feed.html" target="_blank" rel="noreferrer">Databricks Delta Change Data Feed</a> and <a href="https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html" target="_blank" rel="noreferrer">Spark Structured Streaming Programming Guide</a>.
+  </figcaption>
+</figure>
 
 Inside the batch handler, you can then:
 

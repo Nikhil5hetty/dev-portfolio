@@ -1,0 +1,76 @@
+<svg width="1200" height="700" viewBox="0 0 1200 700" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spark cluster sizing tradeoff diagram">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F9FBFF"/>
+      <stop offset="1" stop-color="#EEF4FF"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="96" y1="110" x2="1104" y2="620" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0369A1"/>
+      <stop offset="1" stop-color="#0F4C81"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0F172A" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="700" rx="34" fill="url(#bg)"/>
+  <rect x="24" y="24" width="1152" height="652" rx="28" fill="#FFFFFF" fill-opacity="0.84" stroke="#C6D4E6"/>
+
+  <text x="60" y="82" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="700">Spark Cluster Sizing Tradeoff</text>
+  <text x="60" y="116" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="18">pick the smallest cluster that meets the SLA</text>
+  <text x="60" y="142" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="18">without creating spill, skew pain, or idle compute</text>
+
+  <g filter="url(#shadow)">
+    <rect x="70" y="166" width="300" height="215" rx="24" fill="#F6FAFF" stroke="#B9CBE4"/>
+    <text x="106" y="214" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">What drives sizing</text>
+    <text x="102" y="254" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">join shape and shuffle volume</text>
+    <text x="102" y="286" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">memory pressure and spill risk</text>
+    <text x="102" y="318" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">driver planning pressure</text>
+    <text x="102" y="350" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">latency target and run frequency</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="430" y="166" width="220" height="215" rx="24" fill="#FFF2D8" stroke="#E6D594"/>
+    <text x="470" y="214" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="700">Too small</text>
+    <text x="462" y="252" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">slow stages</text>
+    <text x="462" y="282" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">spill and GC pressure</text>
+    <text x="462" y="312" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">unstable runtimes</text>
+    <text x="462" y="342" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">cheap per hour</text>
+    <text x="462" y="366" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">expensive per job</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="690" y="136" width="230" height="275" rx="24" fill="#E8FFF3" stroke="#B7E2CC"/>
+    <text x="736" y="186" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="700">Right-sized</text>
+    <text x="722" y="226" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">enough executor memory</text>
+    <text x="722" y="252" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">enough cores for parallelism</text>
+    <text x="722" y="278" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">driver coordinates cleanly</text>
+    <text x="722" y="304" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">SLA stays predictable</text>
+    <text x="722" y="330" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">lowest practical total cost</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="960" y="166" width="180" height="215" rx="24" fill="#F4EDFF" stroke="#CDC0EC"/>
+    <text x="988" y="214" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="700">Too large</text>
+    <text x="986" y="252" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">higher hourly cost</text>
+    <text x="986" y="282" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">idle executors</text>
+    <text x="986" y="312" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">small latency gain</text>
+    <text x="986" y="342" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">wasted budget</text>
+  </g>
+
+  <path d="M370 272H418" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M418 272L401 262M418 272L401 282" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M650 272H678" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M678 272L661 262M678 272L661 282" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M920 272H948" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M948 272L931 262M948 272L931 282" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <text x="70" y="470" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">Cost versus latency</text>
+  <rect x="78" y="502" width="1042" height="130" rx="24" fill="#F6FAFF" stroke="#B9CBE4"/>
+  <path d="M140 600C256 540 364 502 540 488C708 476 790 508 906 558C958 582 1010 598 1060 606" stroke="#9AAAC2" stroke-width="8" stroke-linecap="round"/>
+  <path d="M140 602C248 580 362 548 504 506C620 472 706 460 816 468C922 476 996 506 1060 552" stroke="url(#accent)" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="796" cy="468" r="12" fill="#0369A1"/>
+  <text x="822" y="474" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">balanced operating point</text>
+  <text x="136" y="646" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="18">gray: cost rises as cluster size increases</text>
+  <text x="540" y="646" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="18">blue: latency improves, then flattens</text>
+</svg>

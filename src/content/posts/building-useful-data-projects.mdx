@@ -12,6 +12,8 @@ tags:
   - schema-evolution
 ---
 
+import { withBase } from "@/lib/withBase";
+
 A Bronze, Silver, Gold pipeline should prove more than that data can move from one table to another.
 It should prove that the pipeline is designed as a system that can absorb change, preserve trust,
 and support new use cases on top of the same foundation.
@@ -95,6 +97,19 @@ of separate systems that need constant copying.
 This is what makes the architecture useful for building solutions on top of it. Once the layers are
 clear, teams can consume the right layer without having to understand the raw source details.
 
+<figure class="my-10">
+  <img
+    src={withBase("/diagrams/medallion-lakehouse-architecture.svg")}
+    alt="Medallion architecture on a lakehouse showing bronze, silver, and gold layers on a shared platform"
+    class="block w-full rounded-[1.5rem] border border-[var(--line)] bg-[var(--surface-strong)] shadow-[var(--shadow)]"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption class="mt-3 text-sm leading-6 text-[var(--muted)]">
+    Diagram by author. Reference: <a href="https://docs.databricks.com/en/lakehouse/medallion.html" target="_blank" rel="noreferrer">Databricks medallion architecture</a>.
+  </figcaption>
+</figure>
+
 ## How it helps you build on top
 
 A good Bronze / Silver / Gold design is a platform enabler.
@@ -127,6 +142,19 @@ That usually means:
 
 This separation matters because it lets you evolve upstream ingestion without breaking every
 downstream consumer at the same time.
+
+<figure class="my-10">
+  <img
+    src={withBase("/diagrams/schema-evolution-across-layers.svg")}
+    alt="Schema evolution across bronze, silver, and gold layers"
+    class="block w-full rounded-[1.5rem] border border-[var(--line)] bg-[var(--surface-strong)] shadow-[var(--shadow)]"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption class="mt-3 text-sm leading-6 text-[var(--muted)]">
+    Diagram by author. References: <a href="https://docs.databricks.com/en/lakehouse/medallion.html" target="_blank" rel="noreferrer">Databricks medallion architecture</a> and <a href="https://docs.databricks.com/en/delta/update-schema.html" target="_blank" rel="noreferrer">Databricks schema evolution guidance</a>.
+  </figcaption>
+</figure>
 
 ## What good design should protect
 

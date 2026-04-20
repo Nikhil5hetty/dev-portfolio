@@ -1,0 +1,64 @@
+<svg width="1200" height="680" viewBox="0 0 1200 680" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schema evolution across bronze, silver, and gold layers">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="680" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F9FBFF"/>
+      <stop offset="1" stop-color="#EEF4FF"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="96" y1="120" x2="1104" y2="600" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0369A1"/>
+      <stop offset="1" stop-color="#0F4C81"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0F172A" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="680" rx="34" fill="url(#bg)"/>
+  <rect x="24" y="24" width="1152" height="632" rx="28" fill="#FFFFFF" fill-opacity="0.84" stroke="#C6D4E6"/>
+
+  <text x="60" y="82" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="700">Schema Evolution Across Layers</text>
+  <text x="60" y="116" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="18">upstream schemas change, but the platform absorbs that change before it breaks consumers</text>
+
+  <g filter="url(#shadow)">
+    <rect x="70" y="206" width="250" height="260" rx="24" fill="#FEE2E2" stroke="#E8B7B7"/>
+    <text x="140" y="258" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">Upstream change</text>
+    <text x="108" y="302" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="18">new column appears</text>
+    <text x="108" y="334" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">type changes from int to string</text>
+    <text x="108" y="366" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">nested JSON grows another field</text>
+    <text x="108" y="398" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">field names shift over time</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="390" y="206" width="210" height="260" rx="24" fill="#FFF2D8" stroke="#E6D594"/>
+    <text x="458" y="258" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">Bronze</text>
+    <text x="426" y="302" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">preserve raw shape</text>
+    <text x="426" y="334" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">record ingestion metadata</text>
+    <text x="426" y="366" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">keep replayable history</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="640" y="206" width="210" height="260" rx="24" fill="#E8FFF3" stroke="#B7E2CC"/>
+    <text x="708" y="258" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">Silver</text>
+    <text x="676" y="302" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">map and normalize fields</text>
+    <text x="676" y="334" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">validate contracts and types</text>
+    <text x="676" y="366" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">hide upstream volatility</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="890" y="206" width="210" height="260" rx="24" fill="#F4EDFF" stroke="#CDC0EC"/>
+    <text x="964" y="258" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">Gold</text>
+    <text x="926" y="302" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">stable business view</text>
+    <text x="926" y="334" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">stable metrics and dimensions</text>
+    <text x="926" y="366" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">one trusted consumer contract</text>
+  </g>
+
+  <path d="M320 336H372" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M372 336L355 326M372 336L355 346" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M600 336H622" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M622 336L605 326M622 336L605 346" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M850 336H872" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M872 336L855 326M872 336L855 346" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <text x="360" y="572" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700">Design principle</text>
+  <text x="360" y="608" fill="#5D6B82" font-family="Inter, Arial, sans-serif" font-size="16">raw accepts change, curated manages change, and business output protects consumers</text>
+</svg>

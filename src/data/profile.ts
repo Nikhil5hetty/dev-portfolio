@@ -56,11 +56,12 @@ export const PROFILE = {
         "Root-caused a 127% year-over-year rise in Databricks spend with reproducible system-table analysis: serverless SQL consumption drove 78% of growth at unchanged prices; one job drove 90.5% of a product's increase.",
         "Architected an event-driven Lakehouse on Databricks (Kafka, Spark, Delta Lake, Medallion) processing TB-scale workloads; cut latency by 82% and DBU cost by 77%.",
         "Led a 4-member team building a customer insights platform: Oracle and Delta Lake data into Gold-layer tables and APIs, including a 3.6 billion-row model that runs 60% faster end to end.",
+        "Built config-driven incremental learner-analytics facts on Delta Change Data Feed and extended the shared engine with per-fact reconciliation routing; redesigned Pendo export ingestion (export-log state machine, soft deletes).",
         "Built Spark Structured Streaming pipelines on Kafka topics for near real-time downstream tables.",
         "Built late-arriving-data recovery with upstream teams: automated retries, reconciliation reports and missing-record alerts.",
         "Moved orchestration from Airflow to Databricks Workflows after the E2 migration and added PagerDuty alerting.",
       ],
-      stack: ["Databricks", "Spark", "Kafka", "Delta Lake", "Unity Catalog", "Airflow", "PostgreSQL"],
+      stack: ["Databricks", "Spark", "Kafka", "Delta Lake", "System tables", "Unity Catalog", "Airflow"],
     },
     {
       company: "Accenture",

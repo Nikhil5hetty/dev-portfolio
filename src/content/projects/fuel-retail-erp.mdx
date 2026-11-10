@@ -1,0 +1,87 @@
+---
+title: "Fuel Station Operations Platform (ERPNext)"
+description: "A production forecourt system for a branded fuel retail outlet in India: shifts, nozzle meter readings, cash hand-overs, tanker receipts, daily stock reconciliation and an owner's daily report, live since October 2026."
+date: 2026-11-05
+featured: true
+category: "Product · Freelance"
+status: "in production"
+challenge: "The outlet ran on paper registers, spreadsheets and the oil company's screens. Shift settlement was done by hand, and cash and fuel-stock variances surfaced days later with no way to trace them to a person or a shift."
+architecture: "A custom Frappe app on ERPNext v15 (MariaDB): 59 doctypes for shifts, nozzles, hand-overs, credit slips, tankers, dips and reconciliation; a phone-first station app for supervisors and owners and a pump app for attendants; GitHub Actions CI/CD to separate staging and production benches on Oracle Cloud."
+scale: "One retail outlet, 12 staff accounts across attendant, supervisor and owner roles, every litre and rupee of every shift. About 24k lines of Python with 420 automated tests and Playwright end-to-end suites."
+outcome: "Live in production since 21 October 2026, with nine tagged releases in its first two weeks. Every release ships through tested, manually dispatched deploys with a backup first, and the owner gets a daily business report built from meter readings, dips and settlements."
+tags:
+  - erp
+  - python
+  - product
+  - ci-cd
+stack:
+  - Python
+  - Frappe / ERPNext
+  - MariaDB
+  - JavaScript
+  - GitHub Actions
+  - Playwright
+  - Oracle Cloud
+lessons:
+  - Model the business as events (meter movements, hand-overs), not as clock-bound shifts. The station does not close when the clock says so.
+  - Never edit a submitted financial record. Corrections cancel, reverse and amend in one transaction, and leave an audit trail.
+  - With real money involved, trunk-based delivery with feature flags and expand-contract migrations beats long-lived release branches.
+---
+
+## Overview
+
+I built and run this platform for an oil-company-branded fuel retail outlet. The current version
+started with a business requirements document and a software requirements specification I wrote
+with the owner in early October 2026, and went to production on 21 October. The code repository is private;
+I am happy to walk through it in an interview.
+
+## What it covers
+
+- **Shifts and duties**: attendants are assigned to nozzles; every meter movement belongs to whoever
+  holds that nozzle.
+- **Hand-overs**: at each hand-over the meters are read, and the movement since the last reading is
+  that attendant's to account for, in cash, digital payments and credit slips.
+- **Tankers and wet stock**: tanker receipts by compartment, tank dips with calibration charts, and
+  a daily stock check that compares book stock against physical stock within configurable
+  tolerances.
+- **Daily business report**: one document per day that the owner reviews and acknowledges, built
+  bottom-up from meter readings, dips and settlements.
+- **Telegram notifications and points**: the owner and supervisors get events where they already
+  are, and attendants earn points for punctuality against the rota.
+
+## Engineering decisions that mattered
+
+### Corrections without editing history
+
+Submitted records are never edited. Until the day's report is submitted, a supervisor or the owner
+can correct a shift, a hand-over or a dip, always with a reason. The correction **cancels the
+original, reverses its postings and submits an amended copy in one transaction**, and records the
+change in an edit log the owner sees. After the report is submitted, nothing is correctable.
+
+### Event-driven business days
+
+The first version tied shifts to the clock. Real stations do not work that way: if fuel runs out at
+5 PM the business closes at 5 PM; on a busy night it closes the next morning. I wrote a change request,
+now with the owner for approval, that remodels the day as a *business run* that opens and closes on
+events, with times as reminders that never block.
+
+### Releases with real money involved
+
+- Every merge to `master` runs the test suite, deploys to a staging bench with practice data, and
+  smoke-tests it.
+- Production only receives a version tag on `master`, verified against the app version, tested
+  again, and **deployed only by a deliberate manual dispatch from an allowed deployer**, with a
+  backup taken first.
+- New behavior ships behind a setting that is off by default. Changes to the money model use
+  expand-contract: new records are written next to the old ones, compared, then switched over.
+
+### Tests at three levels
+
+About 420 Python test functions cover services and APIs, Playwright suites cover station and pump
+flows end to end including visual checks, and smoke tests run after every deploy.
+
+## My role
+
+Everything: requirements with the owner, data model, backend, the station and pump apps, CI/CD,
+server set-up and production support. I used AI coding agents heavily and wrote the agent
+guidelines (`AGENTS.md`) that keep their output consistent with the codebase and its tests.

@@ -1,0 +1,132 @@
+---
+title: "Ingesting Pendo Data Sync exports without double-counting, losing deletes or paying forever"
+description: "Product analytics exports arrive as manifests, retros and re-sends. An export log with a row-status state machine, soft deletes, and a partitioning mistake worth learning from."
+date: 2026-11-08
+featured: false
+tags:
+  - databricks
+  - delta-lake
+  - ingestion
+  - pendo
+---
+
+Pendo is a product analytics tool: it records which pages and features users touch, how long they
+stay, and which guides they see. Its Data Sync feature drops that data into your S3 bucket as Avro
+files, described by a manifest. That sounds like the easiest kind of ingestion there is. In practice it is
+a small distributed-systems problem, because the exports do not arrive as a clean append-only stream.
+
+I have worked on our Pendo pipeline for about a year and a half: the account and visitor loads, the
+events and metadata loads, the S3 cleanup, a maintenance job, and most recently a partitioning
+change. These are the parts that took the most thought.
+
+## The shape of the problem
+
+A Data Sync manifest lists exports, and each export has a type:
+
+- **Incremental**: ongoing updates for a period.
+- **Final**: the settled version of a period, which can *replace* what incremental already sent.
+- **Retro**: re-sends of history, for example after a Pendo-side backfill.
+
+So the same period can arrive several times, in different shapes, and a record present yesterday
+can be absent from today's final export because it was deleted upstream. An ingestion job that just
+appends will double-count. One that blindly overwrites will lose history. One that never looks back
+will keep deleted rows forever.
+
+## An export log with an explicit state machine
+
+The core of the pipeline is an **export log**: one row per export (period, counter, type, path),
+joined with what we have already processed. Every export gets a `row_status` before anything is
+read:
+
+| Status | Meaning | Action |
+|---|---|---|
+| 0 | Retro export for a period older than the retention cut-off | Delete the files, do not load |
+| 1 | Already processed and past the retention period | Delete the files from S3 |
+| 2 | Not seen before | Process |
+| 3 | Seen before, explicit trigger reset requested | Re-process |
+
+```sql
+CASE
+  WHEN period_id < DATE'2024-12-31' AND export_type = 'retro'            THEN 0
+  WHEN is_data_deleted = FALSE
+   AND to_date(audit_inserted_datetime) < date_sub(current_date(), :retention_days)
+   AND to_date(coalesce(audit_updated_datetime, audit_inserted_datetime))
+         < date_sub(current_date(), :retention_days)                     THEN 1
+  WHEN log_pk IS NULL                                                     THEN 2
+  WHEN log_pk IS NOT NULL AND is_data_deleted = FALSE                     THEN 3
+END AS row_status
+```
+
+Making the decision a column instead of `if` statements scattered through a notebook did three things:
+
+- **Re-runs are safe.** Status 2 only fires for exports with no log entry, so running the job twice
+  processes nothing new the second time.
+- **Re-processing is a deliberate act.** Status 3 needs an explicit trigger-reset parameter. Nobody
+  re-loads a month by accident.
+- **Cleanup is part of the same decision.** S3 deletion is driven by the log, not by a separate
+  script with its own idea of what is safe to delete.
+
+Inside a run, two in-memory sets track which files were already processed and which were already
+deleted. When one manifest references the same path under several exports, each file is still
+processed and deleted exactly once.
+
+## Final exports mean soft deletes
+
+Metadata (pages, features, track types, guides) is loaded with a `MERGE` on the primary key, using
+`last_updated_datetime` to keep the newest version. That handles inserts and updates. It does not
+handle deletes: when a page disappears from a final export, a merge just leaves the old row there.
+
+So after each incremental or final metadata load, a second step flags rows that are **missing from
+the export** for that period as `is_deleted = true`. They are soft deletes, not physical ones. The
+row stays, so historical events still join to the page they happened on, while current-state views
+filter it out.
+
+The rule I follow: **if the source can delete, your ingestion must be able to observe absence**.
+A pure upsert pipeline cannot.
+
+## Retro exports get their own job
+
+Retro exports re-send history, sometimes in volume. Mixing them into the daily job made its runtime
+unpredictable and its failures hard to read. They now run in a dedicated weekly job that merges
+instead of overwriting, and the daily events job explicitly excludes them. Two jobs with one
+responsibility each are easier to reason about, and easier to explain when someone asks what a
+run did.
+
+## The partitioning mistake
+
+Event tables were written with dynamic partition overwrite, partitioned by segment, platform and
+period, **plus the event's own id** (page id or feature id). Adding the id seemed reasonable when
+the job was built: it made overwriting one page's events cheap.
+
+It also multiplied the number of partitions by the number of distinct pages and features, and most
+of those partitions held very little data. Small files make every reader and every `OPTIMIZE` pay.
+
+In August I first wrote the events load to two parallel tables, one partitioned by segment,
+platform and event date and one keeping the id-based layout, so the two strategies could be
+compared on real data before switching. Then I removed the event id from the production partition
+columns and added `ZORDER BY` on page, feature and track-type ids to the maintenance job instead. Z-ordering clusters data *within* files, so lookups by id
+stay selective without creating a directory per id.
+
+The general lesson: **partition by what you prune on at scale (dates, coarse segments); cluster by
+what you look up (ids).** High-cardinality partition columns feel like an optimization on day one
+and turn into a maintenance bill later.
+
+## Maintenance is a workload too
+
+We added a scheduled `OPTIMIZE` and `VACUUM` job for the Pendo catalog in 2025. It was the right
+call, and it also became the biggest single contributor to the Pendo cost increase I investigated
+this year: its DBUs per run rose about 16× year over year, with a similar number of runs (details
+in [the cost investigation post](../databricks-bill-doubled-system-tables/)).
+
+I am deliberately not claiming the partition change fixed that. Billing data alone cannot show it,
+and the numbers after the change need a full comparable period. But the pattern is worth knowing:
+**table maintenance grows with every file you create**, and a table with too many small partitions
+makes its own maintenance job expensive.
+
+## What I would tell someone starting a SaaS export pipeline
+
+- **Model the export log first,** with a status per export. Everything else is easier after that.
+- **Plan for deletes before the first load.** Soft-delete on absence from authoritative exports.
+- **Isolate re-sends and backfills** into their own job.
+- **Do not partition by ids.** Z-order or liquid-cluster by them instead.
+- **Budget for maintenance jobs,** and watch their DBUs per run like any other workload.

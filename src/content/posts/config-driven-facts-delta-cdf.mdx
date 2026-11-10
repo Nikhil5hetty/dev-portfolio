@@ -1,0 +1,137 @@
+---
+title: "One engine, many facts: config-driven incremental pipelines on Delta Change Data Feed"
+description: "How we build learner-analytics facts as configuration, not notebooks: CDF version tracking, deterministic keys, bounded partitions, and reconciliation you can route per fact."
+date: 2026-11-06
+featured: false
+tags:
+  - databricks
+  - delta-lake
+  - change-data-feed
+  - data-modeling
+---
+
+On an education platform, instructors want answers like *which students have not attempted this
+assignment*, *how long did the class spend in the e-book this week*, and *which items does everyone
+get wrong*. Behind each answer is a fact table, and behind each fact table is an incremental pipeline
+reading upstream Delta tables.
+
+Write one notebook per fact and you end up with two dozen notebooks that each re-implement
+"read what changed, deduplicate, merge, remember where I stopped." They drift, and every bug gets
+fixed twelve times. Our team's answer is one engine and many configurations. I build facts on it and
+have extended it. This post describes the pattern, credits the parts that are the team's, and
+covers the parts I added.
+
+## The engine: read changes since last time
+
+Every source is a Delta table with Change Data Feed enabled. The engine keeps a **version tracker**:
+for each source (or logical reader, more on that below), the last Delta version it fully processed.
+A run asks three questions:
+
+1. What is the last version I processed?
+2. What versions does the table still have? (`DESCRIBE HISTORY` gives min and max.)
+3. So what range do I read?
+
+```python
+def curate_cdf_versions(last_version, min_version, max_version):
+    if last_version == max_version:
+        return -1, -1                        # nothing new
+    if last_version is None or not (min_version <= last_version <= max_version):
+        return min_version, max_version      # first run, or history was vacuumed
+    return last_version + 1, max_version     # the normal case
+```
+
+The middle branch is the important one. If table history was cleaned up past the last version we
+processed, the engine falls back to everything still available instead of failing or silently
+skipping. Combined with idempotent merges (below), re-reading is safe. Runs can also be capped at
+*N* versions, which keeps a backlog catch-up from becoming one enormous job.
+
+## A fact is a configuration
+
+Each fact declares what it needs, and the engine does the rest: read the CDF range, keep the latest
+change per key (window over the configured order column), and `MERGE` into the target. Here is a
+trimmed version of the time-spent fact I built, which turns product-analytics reading time into a
+per-learner, per-section, per-day fact:
+
+```python
+PENDOTIMESPENT_CFG = {
+    PK: "pk",
+    SRC_TBL: PENDO_EVENT_TBL,
+    EVENT_NAME: "pendo_time_spent",
+    BACKFILL_IDS: ["org_xid", "section_xid", "learner_xid"],
+    TRG_COLS: """
+        cast(s.event_date as date)                               as event_date,
+        s.time_spent,
+        uuid_str(md5(s.section_xid))                             as section_sk,
+        uuid_str(md5(s.learner_xid))                             as learner_sk,
+        uuid_str(md5(concat(cast(event_date as string),
+                 uuid_str(md5(s.section_xid)),
+                 uuid_str(md5(s.learner_xid)))))                 as pk,
+        cast(date_format(event_date, 'yyyyMMdd') as int)         as date_part_key,
+        pmod(hash(sl.org_xid), 24) + 1                           as org_part_key
+    """,
+    TRG_UPD_COLS: "time_spent = s.time_spent, audit_update_datetime = current_timestamp()",
+    WINDOW_ORDER_COL: "event_date",
+}
+```
+
+Adding a fact means adding a config like this, a DDL and a job definition. No new control flow, so
+no new places for bugs. `BACKFILL_IDS` lets an operator re-run one organization, section or learner
+through the same code path the schedule uses, instead of writing a one-off script.
+
+## Two design choices that make it work
+
+**Deterministic surrogate keys.** Keys are UUIDs derived from an MD5 of the natural id, not sequence
+numbers from a dimension lookup. The same section always gets the same `section_sk`, in every fact,
+in every environment, on every re-run. Facts join to each other without a shared key service, and a
+re-processed row produces exactly the same primary key, so the `MERGE` updates instead of
+duplicating. Idempotency comes from the key design, not from careful operators.
+
+**Bounded partitions.** Partition keys are a date key plus hash buckets: `pmod(hash(org), 24) + 1`.
+Hashing caps the partition count at 24 per dimension no matter how many organizations exist, and
+still gives the merge a predicate to prune on. (Compare our product-analytics tables, where
+partitioning by raw ids [created a small-files problem](../pendo-data-sync-ingestion/).)
+
+## What I added: per-fact reconciliation routing and log keys
+
+Learning data is event-driven, and events arrive out of order. An attempt can land before its
+assignment exists. The team's pattern parks such rows in a **reconciliation table** and retries them
+on later runs, the approach I wrote about in [reconciling late-arriving events](../late-arriving-events-reconciliation/).
+
+Two limits showed up as more facts moved onto the engine, and I extended it for both:
+
+- **One recon table did not fit every fact.** Some facts reconcile against the lakehouse's own recon
+  table; facts built on a different upstream feed need theirs. I made the recon table a per-fact
+  config value (`RECON_TBL`). The engine picks the table and its join clause from config, with the
+  original behavior as the default, so existing facts did not change.
+- **Two readers of one source could not track progress separately.** The version tracker was keyed
+  by source table name. I added an optional `LOG_KEY` so a fact can record its progress under its
+  own name. The default is still
+  the source table, so nothing existing moved.
+
+Both changes follow the same rule: **new behavior behind a config value whose default is the old
+behavior.** On a shared engine that dozens of jobs depend on, this is what makes a change reviewable.
+
+Reconciliation tables are read at a pinned version (`VERSION AS OF` the latest version, captured
+before the query is built). Rows that arrive in the recon table during the run wait for the next one instead
+of being half-seen by this one.
+
+## The facts I built on it
+
+- **Assignment attempts and attempt outcomes**: refactored into the config pattern, with policy
+  exceptions and item-level outcomes.
+- **Section info and section-learner assignment**: the joins every other insight depends on.
+- **Time spent**: two sources, assignment activity and e-book reading time from product analytics,
+  landing in one fact with a `category` column so instructors see both in one place.
+- **A reconciliation stage** for the section-assignment cross-reference, with its own DDL and
+  schedule.
+
+Along the way I restructured the job layer: config-based job definitions, multi-task jobs, and archiving jobs and tasks that no longer had consumers. A job that
+nobody reads still costs money every night.
+
+## What I would carry to any team
+
+- **Make the incremental logic a library, and the pipeline a config.**
+- **Derive keys from natural ids.** Idempotent merges follow for free.
+- **Hash-bucket high-cardinality partition keys.**
+- **Plan for history you no longer have.** Fall back to what is available, safely.
+- **Extend shared engines behind defaults.** Old jobs should not notice your change.

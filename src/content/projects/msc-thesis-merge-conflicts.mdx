@@ -1,0 +1,56 @@
+---
+title: "MSc Thesis: Compact Features for Merge Conflict Resolution"
+description: "Can a merge conflict classifier keep its accuracy with a fraction of its 969 features and without expensive text embeddings? Leakage-safe feature selection and energy measurement on a multilingual dataset, run on a university HPC cluster."
+date: 2026-11-04
+featured: true
+category: "Research · ML"
+status: "in progress"
+challenge: "Classifiers that predict how developers resolve merge conflicts use hundreds of features, including LLM text embeddings that are expensive to compute. Which features actually carry the signal, and how much accuracy and energy does a smaller set trade away?"
+architecture: "A Python package wrapping the research team's merge-classifier code: fold-internal feature selection, cross-project, cross-language and cross-time evaluation protocols, energy measurement, and one CLI for every experiment, run on the UBELIX cluster through Slurm."
+scale: "A 969-feature representation across 10 programming languages, plus a 42-feature baseline over 17 projects; Random Forest and gradient-boosted models; multi-seed runs."
+outcome: "Reproduced the reference paper's cross-time results within 1 percentage point, with exact parity tests against the team's runner. Feature-family, embedding-ablation and selection experiments are running; early dev-split results suggest simple text-similarity features may stand in for some embedding features (unconfirmed on the test split)."
+tags:
+  - machine-learning
+  - research
+  - python
+  - hpc
+stack:
+  - Python
+  - scikit-learn
+  - XGBoost
+  - pandas
+  - Slurm (UBELIX)
+  - Azure
+lessons:
+  - Feature selection must only ever see the training part of each split. Ranking on the full data inflates results; my first version did, and tests now enforce it.
+  - Differences under one point from a single seed are noise until multi-seed runs or paired tests say otherwise.
+  - Reproduce the paper exactly before improving on it. Parity tests make every later number trustworthy.
+---
+
+## Overview
+
+My thesis sits inside the University of Bern Software Engineering Group's merge conflict research
+programme. The team predicts *how* a merge conflict will be resolved (take ours, take theirs,
+combine, rewrite) from features of the conflicting code chunks and their history.
+
+The question I own: **which of those features are worth computing?** Text embeddings from a
+language model are the most expensive inputs. If a compact set of features, or cheap text-similarity
+measures, keep most of the accuracy, the classifier becomes far cheaper to train and run.
+
+## What I built
+
+- **One package, one CLI.** Every experiment is a config file run by the same command, with no
+  notebooks or one-off scripts. Each result folder traces back to a config and a commit.
+- **Exact parity with the team's code.** The evaluation loop mirrors the team runner fold for fold
+  and adds one hook: feature selection on the training split, after cleaning and before fitting.
+  A test asserts that with all features the metrics equal the team's exactly.
+- **Leakage guards as tests.** Folds are grouped by merge, and by project, language or time as the
+  protocol requires. Selection never sees test data.
+- **Cluster runs with guard rails.** Experiments run on the UBELIX HPC cluster via Slurm, reached
+  through an Azure jump host; the push script refuses uncommitted code, so every run names a commit.
+
+## Status
+
+The reproduction gate passed. Feature-family selection, embedding-input ablations and compact-set
+confirmation runs are in progress, and energy measurement comes next. I will update this page with
+final results when the thesis is submitted.

@@ -1,0 +1,52 @@
+---
+title: "Gym Management Platform"
+description: "A multi-role gym app for admins, coaches and members: memberships, class scheduling and booking, workout programming, and QR-code attendance. Flutter front end, FastAPI and PostgreSQL back end, infrastructure as code."
+date: 2026-10-25
+featured: true
+category: "Product · Full stack"
+status: "staging"
+challenge: "Small gyms juggle memberships, class schedules, coach programmes and attendance across paper, spreadsheets and messaging apps. Members cannot see or book classes themselves, and attendance is unreliable."
+architecture: "Flutter apps (web and mobile) for three roles on a FastAPI + SQLAlchemy 2 + PostgreSQL API with Alembic migrations; a single users table with gym-scoped roles and permissions; Docker and Caddy deploys provisioned with Terraform and cloud templates."
+scale: "About 20k lines of Dart and 11k lines of Python, 338 backend tests plus Playwright end-to-end flows. Staging is provisioned with a workout library and a two-week class schedule; the production deploy is intentionally disabled until launch."
+outcome: "Admin, coach and member apps are working end to end on staging, including member self-registration, class booking and QR check-in with configurable attendance windows."
+tags:
+  - full-stack
+  - flutter
+  - fastapi
+  - postgres
+stack:
+  - Flutter / Dart
+  - Python
+  - FastAPI
+  - PostgreSQL
+  - SQLAlchemy
+  - Docker
+  - Terraform
+lessons:
+  - One identity table with role memberships per gym handles the owner who also coaches without special cases.
+  - Write the requirements per module first. Ten short requirement documents kept the front end and the API aligned.
+  - Keep production deploys disabled in code until launch, so staging experiments can never leak into it.
+---
+
+## Overview
+
+A side project with a friend (I wrote most of the code): a gym platform with separate experiences
+for admins, coaches and members. The repository is private; I am happy to demo it.
+
+## What it does
+
+- **Admin**: members, memberships and plans, coaches, the weekly class schedule and payments.
+- **Coach**: an exercise library, workout programmes for clients, classes to run.
+- **Member**: self-registration from a phone, class discovery and booking, and check-in by scanning
+  a QR code at the door within a configurable window.
+
+## Engineering notes
+
+- **Data model first.** A written ER design separates identity (`users`) from gym-specific roles
+  and profiles, so one person can be a member at one gym and a coach at another.
+- **API contract between front end and back end.** A hand-off document fixes endpoints and payloads
+  so the Flutter screens and FastAPI routers can be built in parallel.
+- **Tested back end.** 338 pytest tests cover the domain APIs; Playwright covers admin and member
+  flows in the browser.
+- **Repeatable environments.** Docker images behind Caddy, provisioned with Terraform and cloud
+  templates. Staging can be rebuilt from scratch with seed data.

@@ -15,16 +15,17 @@ const projects = sortByDateDesc((await getCollection("projects")).filter(isPubli
       <div class="flex flex-wrap items-center gap-3 text-sm text-[var(--muted)]">
         <span class="blog-kicker">Projects</span>
         <span aria-hidden="true">•</span>
-        <span>Engineering notes</span>
+        <span>Case studies</span>
       </div>
 
       <h1 class="blog-title project-title">
-        Long-form project writing
+        Things I have built
       </h1>
 
       <p class="blog-dek project-dek">
-        These project entries are written like technical articles: the problem, the system shape, the
-        implementation choices, and the tradeoffs are all visible in one reading flow.
+        A production system for a fuel retailer, a full-stack gym platform, my MSc research, and a
+        streaming lakehouse reference build. Each page covers the problem, the design, and what I
+        would do again.
       </p>
     </header>
 

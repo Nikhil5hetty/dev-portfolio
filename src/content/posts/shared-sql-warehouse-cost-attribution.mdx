@@ -1,0 +1,177 @@
+---
+title: "Who pays for the shared SQL warehouse? Building cost attribution people trust"
+description: "Pricing Databricks usage from system tables, splitting shared warehouse cost by query execution time, and an attribution chain that prefers explicit tags over clever regexes."
+date: 2026-11-10
+featured: true
+tags:
+  - databricks
+  - finops
+  - cost-attribution
+  - system-tables
+---
+
+A cost dashboard is only as good as the table under it. The one I inherited answered "how much did
+we spend" well and "who spent it" badly, and the second question is the only one that changes
+behavior.
+
+Three problems made the numbers hard to trust:
+
+- **Prices were hard-coded.** Per-SKU rates lived in job parameters and had to be edited by hand
+  whenever pricing changed or a new SKU appeared.
+- **Shared SQL warehouses had no owner.** Serverless SQL was the fastest-growing cost on the
+  platform, and nearly all of it ran on warehouses shared by dozens of people and dashboards.
+- **Solution attribution was a pile of name heuristics.** A job's product was inferred from its
+  name, its owner or its workspace. Rename a job and its cost moved to another team.
+
+Here is how I rebuilt it, and the design rules that came out of it.
+
+## Rule 1: price from the source, discount from config, and fail on gaps
+
+Databricks publishes the price history it bills against in `system.billing.list_prices`. Using it
+removes a whole class of maintenance: new SKUs and price changes arrive on their own, effective-dated.
+
+Contract discounts are not in system tables, so they need a small config table of their own:
+
+```text
+product_key        discount_percent   effective_from   effective_to
+*                  10                 2025-02-01       null
+JOBS_COMPUTE       20                 2025-02-01       null
+SERVERLESS_SQL     15                 2025-02-01       null
+```
+
+*(Illustrative values, not real contract terms.)*
+
+The job is parameterized with a compact string like `*=0.10;JOBS_COMPUTE=0.20;SERVERLESS_SQL=0.15`
+and an effective date, which it writes to the table as a new version. Three validations run before
+any cost is computed:
+
+1. **A default (`*`) entry is mandatory**, so every SKU has a discount.
+2. **Every key must be a known product family and every percentage must be in range.** A typo fails
+   the run instead of producing a plausible wrong number.
+3. **After pricing, count usage records with no list price or no discount.** If any non-free record
+   is unpriced, the job raises. It does not write zero.
+
+That last rule is the important one. A cost table that silently prices unknown usage at zero will
+always look reasonable, and it will always be wrong in the direction nobody notices.
+
+```sql
+-- Effective-dated list price for each usage record
+select
+  u.record_id,
+  u.usage_quantity                                   as dbus,
+  lp.pricing.default                                 as list_price,
+  u.usage_quantity * lp.pricing.default              as list_cost
+from system.billing.usage u
+left join system.billing.list_prices lp
+  on  u.sku_name   = lp.sku_name
+  and u.cloud      = lp.cloud
+  and u.usage_unit = lp.usage_unit
+  and u.usage_start_time >= lp.price_start_time
+  and (lp.price_end_time is null or u.usage_start_time < lp.price_end_time);
+```
+
+## Rule 2: split shared compute by what each person actually ran
+
+A SQL warehouse bills DBUs for the warehouse, not for the queries. To charge it back you need an
+allocation key. I used **query execution time per user, per warehouse, per day** from
+`system.query.history`:
+
+```sql
+with qh as (
+  select
+    workspace_id,
+    compute.warehouse_id            as warehouse_id,
+    to_date(start_time)             as usage_date,
+    executed_by                     as user_name,
+    sum(coalesce(execution_duration_ms, 0)) as execution_ms
+  from system.query.history
+  where compute.type = 'WAREHOUSE'
+    and compute.warehouse_id is not null
+  group by all
+)
+select *,
+  execution_ms / sum(execution_ms) over (
+    partition by workspace_id, warehouse_id, usage_date
+  ) as usage_share
+from qh
+where execution_ms > 0;
+```
+
+Each warehouse-day's DBUs are multiplied by each user's `usage_share`. Shares sum to one per
+warehouse-day, so the allocated total always equals the billed total.
+
+Two decisions matter more than the SQL:
+
+- **Execution time, not query count.** One 40-minute dashboard refresh costs more than a hundred
+  `SELECT 1` health checks. Counting queries rewards the wrong behavior.
+- **Days with billed DBUs but no queries go to an explicit `UNATTRIBUTED` bucket.** Warehouses
+  bill for start-up and idle time. Spreading that across whoever happened to run something that
+  week hides the real problem, which is usually auto-stop settings. A visible unattributed line is
+  a finding. A hidden one is noise.
+
+I chose daily grain deliberately. Hourly is more precise, but queries cross hour boundaries and the
+precision is mostly illusory. Daily shares were stable, explainable to finance, and cheap to compute.
+
+## Rule 3: explicit beats inferred, but keep the fallback
+
+Attribution to a product (we called them *solutions*) is a precedence chain, first non-null wins.
+The pipeline already resolves steps 2 to 6; step 1 is the change I specified and rolled the tags
+out for:
+
+1. **The job's `Solution` custom tag**, read from the billing record's `custom_tags`.
+2. **An explicit job-to-solution mapping table** for jobs that are not tagged.
+3. **The owning service principal's solution**, unless that principal is shared across teams.
+4. **Individual human users** go to an "ad hoc usage" solution.
+5. **Name and workspace rules**, the old heuristics, as a last resort.
+6. `Others`.
+
+```sql
+coalesce(
+  nullif(trim(custom_tags['Solution']), ''),   -- 1. explicit tag
+  jsm.solution,                                 -- 2. mapping table
+  case when not sp_is_shared then sp_solution end,  -- 3. service principal
+  case when user_type = 'INDIVIDUAL' then 'Ad Hoc' end,  -- 4. people
+  /* 5. legacy name/workspace rules */
+  'Others'
+) as solution
+```
+
+The tag only helps if jobs carry it, so the second half of the work was operational: adding a
+`Solution` tag to **every job template in the repository (314 of them)**, plus a job-type tag so
+test jobs can be filtered out of production views. Because the tag lives in the template, once the
+attribution reads it a new job is attributed correctly from its first run, and renaming a job no
+longer moves its cost.
+
+The fallback is not legacy baggage. Historical usage was billed before the tags existed, and a
+backfill window always mixes tagged and untagged records. The acceptance criterion I wrote for the
+change is simple: **for records without a tag, every output column must be identical before and
+after.** Attribution improves for new usage without rewriting history.
+
+## Rule 4: reconcile on every run
+
+A separate validation notebook runs against the output and checks what a reviewer would check:
+
+- Attributed DBUs equal raw `system.billing.usage` DBUs for the same window.
+- The primary key (billing record plus user) is unique, so a re-run merges instead of duplicating.
+- No row is missing a list price or a discount.
+- The summary view the dashboard reads matches the underlying table to the cent, and the new view
+  is compared with the old one before it replaces it.
+
+When someone asks whether the dashboard is right, the answer is a query result, not an opinion.
+
+## What changed
+
+The direct result is a cost table that reconciles to billing on every run and prices new SKUs
+without a code change. The more useful result is that it made the next question answerable. When spend more than doubled year over year, the attributed table
+showed serverless SQL driving 78% of the growth at unchanged unit prices, and every
+product-level increase traced down to named jobs with owners. That investigation is written up in
+[the previous post](../databricks-bill-doubled-system-tables/).
+
+## If you are building this yourself
+
+- **Use `system.billing.list_prices`.** Hard-coded rates are a bug waiting for a price change.
+- **Fail on unpriced usage.** Zero is not a safe default for money.
+- **Allocate shared warehouses by execution time and show the idle cost.**
+- **Tag at the template level and keep a tested fallback.** Explicit attribution scales; heuristics
+  drift.
+- **Ship the reconciliation with the pipeline,** not as a one-off check.

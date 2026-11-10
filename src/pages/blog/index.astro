@@ -12,11 +12,11 @@ const posts = sortByDateDesc((await getCollection("posts")).filter(isPublished))
   <section class="space-y-4">
     <p class="text-xs uppercase tracking-[0.28em] text-[var(--accent)]">Blog</p>
     <h1 class="text-5xl font-semibold tracking-[-0.04em] text-[var(--text)] sm:text-6xl">
-      Writing archive
+      Field notes
     </h1>
     <p class="max-w-3xl text-lg leading-8 text-[var(--muted)] sm:text-[1.15rem]">
-      A chronological archive of technical posts, learning notes, and practical reflections from
-      building Spark and data platform work over time.
+      Write-ups from production data platform work: what broke or cost too much, how I found out why,
+      and what I changed. Client details are anonymized.
     </p>
   </section>
 

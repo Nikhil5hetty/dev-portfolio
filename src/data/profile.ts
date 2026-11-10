@@ -52,6 +52,8 @@ export const PROFILE = {
       summary:
         "Lead engineer on an event-driven Databricks lakehouse and a customer-facing insights platform for a US client.",
       bullets: [
+        "Rebuilt the Databricks FinOps cost-attribution pipeline behind the cost dashboard: system list prices with effective-dated discounts, per-user allocation of shared SQL-warehouse cost, reconciliation checks, and Solution tags across 314 job templates.",
+        "Root-caused a 127% year-over-year rise in Databricks spend with reproducible system-table analysis: serverless SQL consumption drove 78% of growth at unchanged prices; one job drove 90.5% of a product's increase.",
         "Architected an event-driven Lakehouse on Databricks (Kafka, Spark, Delta Lake, Medallion) processing TB-scale workloads; cut latency by 82% and DBU cost by 77%.",
         "Led a 4-member team building a customer insights platform: Oracle and Delta Lake data into Gold-layer tables and APIs, including a 3.6 billion-row model that runs 60% faster end to end.",
         "Built Spark Structured Streaming pipelines on Kafka topics for near real-time downstream tables.",

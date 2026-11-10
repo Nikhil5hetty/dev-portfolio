@@ -1,0 +1,201 @@
+---
+title: "The Databricks bill doubled. Here is how I found out why"
+description: "A system-tables playbook for explaining a cost increase: matched periods, reconciliation first, a volume-versus-rate bridge, and DBUs per run as the number that finally points at a cause."
+date: 2026-11-10
+featured: true
+tags:
+  - databricks
+  - finops
+  - system-tables
+  - cost
+---
+
+The question arrived the way it always does: a screenshot of a cost dashboard, a line going up and
+to the right, and "why did Databricks get so expensive?"
+
+The year-over-year number was real. Modeled discounted DBU spend on the platform had more than
+doubled (+127%) over the same 267 days of the previous year. The first answer people reach for is
+"Databricks raised prices." That answer was mostly wrong, and proving it took a method more than a
+query.
+
+This is the playbook I used. Nothing in it needs anything beyond `system.billing`,
+`system.compute`, `system.lakeflow` and `system.query`, plus discipline about what the data can
+and cannot tell you.
+
+## 1. Fix the comparison before you compute anything
+
+Most bad cost conclusions are wrong before the first `GROUP BY`.
+
+- **Compare matched calendar windows.** Our billing history started in February of the prior
+  year and the current month was partial, so the honest comparison was February 1 to October 25
+  in both years. Not "this year vs last year", not annualized.
+- **Write down the scope.** All workspaces and environments, or production only? Discounted DBU
+  cost, list cost, or invoice? We used modeled discounted DBU cost and explicitly excluded AWS
+  infrastructure and invoice adjustments, so nobody would compare our number with the finance one.
+- **Decide how to treat odd rows.** Rows with a null cost were all `FREE_USAGE` SKUs. They stay in
+  DBU totals and are never imputed.
+
+If a stakeholder later disagrees with your number, the disagreement should be about scope you wrote
+down, not about arithmetic.
+
+## 2. Reconcile before you explain
+
+The cost dashboard was built on an attributed table: billing records enriched with a solution
+(product), a job, a user. Attribution is where cost data lies to you. A record joined twice is a
+cost increase that never happened.
+
+So before any explanation, I checked three things:
+
+1. **Attributed totals equal raw totals.** Sum of attributed DBUs per day against
+   `system.billing.usage` for the same day.
+2. **No missing records.** Every raw billing `record_id` appears in the attributed table.
+3. **No double allocation.** Records split across solutions sum back to one.
+
+For the products I investigated, reconciliation found zero missing records and attributed DBUs
+matched raw DBUs exactly. That is a boring result, and it is the most important one: it means every
+later finding is about consumption, not about bookkeeping.
+
+## 3. Split volume from rate
+
+Spend is DBUs times price. Before arguing about either, separate them.
+
+At the prior year's blended cost per DBU, the extra DBUs explain one part of the increase. The
+residual is the "rate and mix" effect.
+
+| | Prior | Current | Change |
+|---|---:|---:|---:|
+| DBUs | index 100 | 162 | +62% |
+| Spend | index 100 | 227 | +127% |
+
+Volume growth explained roughly half of the increase. The other half was the blended rate rising,
+and that is the part people read as "price went up."
+
+It was not. Breaking the rate down by SKU showed the largest driver, serverless SQL, had the **same
+list price and the same discount in both periods**. Its DBUs simply grew several times over, and
+because serverless SQL costs more per DBU than classic jobs compute, the workload mix shifted the
+blended rate upward. Serverless SQL alone drove 78% of the net growth.
+
+Two warnings about this bridge. It is order-dependent (volume first, then rate), and it is
+arithmetic, not causality. I label it that way in every report, because "rate/mix residual" will
+otherwise be quoted in a meeting as "Databricks raised prices by X%."
+
+```sql
+-- Price every usage record at the list price in effect when it was used.
+with priced as (
+  select
+    u.usage_date,
+    u.workspace_id,
+    u.billing_origin_product            as workload,
+    u.sku_name,
+    u.usage_metadata.job_id             as job_id,
+    u.usage_metadata.job_run_id         as job_run_id,
+    u.usage_metadata.cluster_id         as cluster_id,
+    u.usage_quantity                    as dbus,
+    u.usage_quantity * lp.pricing.default as list_cost
+  from system.billing.usage u
+  left join system.billing.list_prices lp
+    on  u.sku_name   = lp.sku_name
+    and u.cloud      = lp.cloud
+    and u.usage_unit = lp.usage_unit
+    and u.usage_start_time >= lp.price_start_time
+    and (lp.price_end_time is null or u.usage_start_time < lp.price_end_time)
+),
+periods as (
+  select *,
+    case
+      when usage_date between '2025-02-01' and '2025-10-25' then 'prior'
+      when usage_date between '2026-02-01' and '2026-10-25' then 'current'
+    end as period
+  from priced
+)
+select sku_name, period,
+       sum(dbus)                    as dbus,
+       sum(list_cost)               as list_cost,
+       sum(list_cost) / sum(dbus)   as list_price_per_dbu
+from periods
+where period is not null
+group by sku_name, period;
+```
+
+If `list_price_per_dbu` is flat for a SKU across periods, that SKU's growth is consumption, full stop.
+
+## 4. Walk down the hierarchy until the cost concentrates
+
+Platform, then workload type, then SKU, then solution, then job. At each level, look for where the
+increase concentrates, not where the spend is largest.
+
+The pattern was striking. Platform growth was broad, but **within a product it was almost always
+one or two jobs**:
+
+- In one product, a single production aggregation job explained **90.5%** of the increase.
+- In another, three jobs explained **99%** of it, led by a table-maintenance (optimize and vacuum)
+  job.
+
+That is the moment an investigation becomes actionable. "SQL is expensive" is a strategy
+discussion. "This job" is a ticket with an owner.
+
+## 5. Normalize per run. This is where causes show up
+
+A job's cost can rise because it runs more often or because each run does more work. Billing
+records carry `job_run_id`, so you can tell the two apart:
+
+```sql
+select job_id, period,
+       count(distinct job_run_id)                 as billed_runs,
+       sum(dbus)                                  as dbus,
+       sum(dbus) / count(distinct job_run_id)     as dbus_per_run
+from periods
+where job_id is not null and period is not null
+group by job_id, period;
+```
+
+For the aggregation job, billed runs went slightly **down** year over year while DBUs per run went
+up **3.08×**. Frequency was ruled out in one query. Compute metadata (join `cluster_id` to
+`system.compute.clusters`) showed the job had moved from a 4xlarge to an 8xlarge worker type in the same instance family. That
+is a plausible cause of a sustained step-up, and a cheap thing to test.
+
+The table-maintenance job told the same story more dramatically: roughly **16× more DBUs per run**
+with a similar run count. Maintenance jobs are easy to forget once they are scheduled, and they
+quietly grow with every table they touch.
+
+## 6. Say what billing cannot tell you
+
+Billing tells you *how much compute*, not *why*. It cannot distinguish more input data from slower
+processing, extra workers from longer runs, or retries from real work. For that you need run
+history (`system.lakeflow.job_run_timeline`, task timelines) and ideally input sizes.
+
+On this platform my first attempt at run history failed with a permissions error on
+`system.lakeflow`. I recorded the failure, kept the query, and wrote "frequency, runtime, retries and
+compute sizing remain unverified" in the findings instead of guessing. The later run-level pass
+narrowed it down: from one month to the next, the job's average scheduled run took about twice as
+long *and* burned more DBUs per elapsed hour. Telling worker scaling apart from data growth still
+needs task-level metrics, and the report says so.
+
+A finding labeled "plausible, not proven" that later gets confirmed builds more trust than a
+confident guess that gets corrected.
+
+## 7. Make it repeatable, and make it safe
+
+The investigation lived in a small repo, not a notebook session:
+
+- **Numbered, read-only SQL files**, executed in order. The runner rejects multi-statement input
+  and anything that is not `SELECT`, `DESCRIBE` or `SHOW`, so an analysis can never mutate
+  production.
+- **Every result saved with metadata**: execution time, row count, schema, and the error if it
+  failed.
+- **A summarizer that validates before it reports**: calendar coverage, cross-export totals,
+  unique job identities. If the checks fail, there is no report.
+
+Extending the analysis through a later date is a date change and a re-run, not a new
+investigation.
+
+## What I would tell anyone starting this
+
+- **Reconcile first.** You cannot explain a number you have not verified.
+- **Separate volume from rate before anyone says "price increase."**
+- **Per-run normalization is the most useful number in Databricks cost work.** Costs that look like
+  growth are usually heavier runs, not more of them.
+- **Write the limits into the report.** It is what makes the rest believable.
+
+The longer-term fix was not the investigation itself but making attribution trustworthy by default.
+That is the subject of [the next post](../shared-sql-warehouse-cost-attribution/).

@@ -3,6 +3,12 @@ export const PROFILE = {
   name: "Nikhil Shetty",
   role: "Principal Data Engineer",
   stackLine: "Spark · Databricks · Kafka · Delta Lake · AWS",
+  // Cycled by the typing effect under the name in the hero.
+  rotatingRoles: [
+    "Principal Data Engineer",
+    "Spark & Databricks specialist",
+    "Streaming lakehouse builder",
+  ],
   headline:
     "I build streaming and batch data platforms that run faster and cost less.",
   summary:
@@ -29,6 +35,13 @@ export const PROFILE = {
     "Python",
     "Scala",
     "SQL",
+  ],
+  skillGroups: [
+    { label: "Processing & Streaming", items: ["Apache Spark", "Structured Streaming", "Kafka", "Delta Lake", "Hive", "dbt"] },
+    { label: "Platforms", items: ["Databricks", "Unity Catalog", "Airflow", "Databricks Workflows", "Docker"] },
+    { label: "Cloud", items: ["AWS Glue", "EMR", "Athena", "Redshift", "BigQuery", "Snowflake"] },
+    { label: "Languages", items: ["Python", "SQL", "Scala", "Java"] },
+    { label: "Databases", items: ["PostgreSQL", "Oracle", "MS SQL Server"] },
   ],
   experience: [
     {
@@ -66,12 +79,14 @@ export const PROFILE = {
   education: [
     {
       school: "University of Bern",
+      mark: "M.Sc.",
       credential: "Master of Science",
       period: "2024 - Present",
       note: "Thesis: ML for merge conflict resolution",
     },
     {
       school: "B.V. Bhoomaraddi College of Engineering",
+      mark: "B.Tech",
       credential: "B.Tech, Information Science",
       period: "2014 - 2018",
       note: "CGPA 8.20 / 10",

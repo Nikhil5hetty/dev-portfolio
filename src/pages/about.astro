@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import ExperienceList from "@/components/ExperienceList.astro";
+import SectionHeading from "@/components/SectionHeading.astro";
 import { PROFILE } from "@/data/profile";
 import { SITE } from "@/site";
 import { withBase } from "@/lib/withBase";
@@ -10,73 +11,83 @@ import { withBase } from "@/lib/withBase";
   title={`Experience | ${SITE.author}`}
   description="Work history, skills, education and resume download for Nikhil Shetty, Principal Data Engineer."
 >
-  <section class="panel rounded-[2rem] p-7 sm:p-10">
-    <p class="home-kicker text-sm text-[var(--accent)]">About</p>
-    <h1 class="home-title mt-3 max-w-3xl text-4xl font-semibold tracking-[-0.03em] text-[var(--text)] sm:text-5xl">
-      {PROFILE.headline}
-    </h1>
-    <p class="mt-5 max-w-3xl text-lg leading-8 text-[var(--muted)]">{PROFILE.summary}</p>
-    <p class="mt-4 max-w-3xl text-base leading-7 text-[var(--muted)]">
-      I'm in the final semester of an MSc at the University of Bern, where my thesis applies machine
-      learning to merge conflict resolution. {PROFILE.availability}.
-    </p>
-    <div class="mt-6 flex flex-wrap gap-3">
-      <a
-        href={withBase(PROFILE.resumePath)}
-        download
-        class="inline-flex rounded-full bg-[var(--accent-solid)] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
-      >
-        Download resume
-      </a>
-      <a
-        href={`mailto:${PROFILE.email}`}
-        class="inline-flex rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/40"
-      >
-        {PROFILE.email}
-      </a>
+  <section class="grid gap-10 pt-6 sm:pt-12 lg:grid-cols-[1fr_auto] lg:items-center">
+    <div>
+      <p class="kicker">— {PROFILE.role} · Data Platforms · Streaming —</p>
+      <h1 class="display mt-5 text-6xl font-semibold leading-[0.95] text-[var(--text)] sm:text-7xl">
+        Nikhil<br /><span class="name-gradient">Shetty</span>
+      </h1>
+      <p class="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted)]">{PROFILE.summary}</p>
+      <p class="mt-4 max-w-2xl leading-7 text-[var(--muted)]">
+        I'm in the final semester of an MSc at the University of Bern, where my thesis applies machine
+        learning to merge conflict resolution. {PROFILE.availability}.
+      </p>
+      <div class="mt-7 flex flex-wrap gap-3">
+        <a
+          href={withBase(PROFILE.resumePath)}
+          download
+          class="inline-flex rounded-full bg-[var(--accent-solid)] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+        >
+          Download resume
+        </a>
+        <a
+          href={`mailto:${PROFILE.email}`}
+          class="inline-flex rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/40"
+        >
+          {PROFILE.email}
+        </a>
+      </div>
+    </div>
+    <img
+      src={withBase("/images/profile-photo.jpeg")}
+      alt="Portrait of Nikhil Shetty"
+      class="hidden aspect-square w-64 rounded-full border border-[var(--line)] object-cover object-[50%_18%] shadow-[0_0_0_8px_var(--surface),var(--shadow)] lg:block"
+      loading="eager"
+      decoding="async"
+    />
+  </section>
+
+  <section class="mt-24 space-y-8">
+    <SectionHeading kicker="Career" title="Work Experience" />
+    <ExperienceList />
+  </section>
+
+  <section class="mt-24 space-y-8">
+    <SectionHeading kicker="Background" title="Education" />
+    <div class="grid gap-5 md:grid-cols-2">
+      {PROFILE.education.map((item) => (
+        <article class="edu-card panel rounded-[1.5rem] p-7">
+          <p class="kicker">{item.credential}</p>
+          <h3 class="display mt-3 text-2xl font-semibold italic text-[var(--accent)]">{item.school}</h3>
+          <p class="mt-3 font-mono text-xs uppercase tracking-[0.18em] text-[var(--muted)]">{item.period}</p>
+          <p class="mt-4 border-t border-[var(--line)] pt-4 text-sm text-[var(--muted)]">{item.note}</p>
+          <span class="edu-mark" aria-hidden="true">{item.mark}</span>
+        </article>
+      ))}
     </div>
   </section>
 
-  <section class="mt-16">
-    <p class="home-kicker text-sm text-[var(--accent)]">Experience</p>
-    <h2 class="home-title mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--text)] sm:text-4xl">
-      Professional experience
-    </h2>
-    <div class="panel mt-6 rounded-[2rem] p-6 sm:p-8">
-      <ExperienceList />
-    </div>
-  </section>
-
-  <section class="mt-16 grid gap-5 lg:grid-cols-3">
-    <div class="panel rounded-[2rem] p-6">
-      <p class="home-kicker text-xs text-[var(--accent)]">Core stack</p>
-      <ul class="mt-4 flex flex-wrap gap-2">
-        {PROFILE.coreStack.map((skill) => (
-          <li class="rounded-full border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-1 text-sm text-[var(--text)]">
-            {skill}
-          </li>
-        ))}
-      </ul>
-    </div>
-
-    <div class="panel rounded-[2rem] p-6">
-      <p class="home-kicker text-xs text-[var(--accent)]">Education</p>
-      <ul class="mt-4 space-y-4">
-        {PROFILE.education.map((item) => (
-          <li>
-            <p class="font-semibold text-[var(--text)]">{item.school}</p>
-            <p class="text-sm text-[var(--muted)]">{item.credential} · {item.period}</p>
-            <p class="text-sm text-[var(--muted)]">{item.note}</p>
-          </li>
-        ))}
-      </ul>
-    </div>
-
-    <div class="panel rounded-[2rem] p-6">
-      <p class="home-kicker text-xs text-[var(--accent)]">Recognition</p>
-      <ul class="mt-4 list-disc space-y-2 pl-5 text-[var(--text)] marker:text-[var(--accent)]">
-        {PROFILE.awards.map((award) => <li>{award}</li>)}
-      </ul>
+  <section class="mt-24 space-y-8">
+    <SectionHeading kicker="Toolkit" title="Key Skills" />
+    <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+      {PROFILE.skillGroups.map((group) => (
+        <article class="panel rounded-[1.5rem] p-6">
+          <p class="kicker">{group.label}</p>
+          <ul class="mt-4 flex flex-wrap gap-2">
+            {group.items.map((skill) => (
+              <li class="rounded-full border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-1 text-sm text-[var(--text)]">
+                {skill}
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))}
+      <article class="panel rounded-[1.5rem] p-6">
+        <p class="kicker">Recognition</p>
+        <ul class="mt-4 space-y-2 text-[var(--text)]">
+          {PROFILE.awards.map((award) => <li>{award}</li>)}
+        </ul>
+      </article>
     </div>
   </section>
 </BaseLayout>

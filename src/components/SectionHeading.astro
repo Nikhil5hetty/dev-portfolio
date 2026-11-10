@@ -1,0 +1,28 @@
+---
+import { withBase } from "@/lib/withBase";
+
+interface Props {
+  kicker: string;
+  title: string;
+  linkLabel?: string;
+  linkHref?: string;
+  as?: "h1" | "h2";
+}
+
+const { kicker, title, linkLabel, linkHref, as: Heading = "h2" } = Astro.props as Props;
+---
+
+<div class="flex items-end justify-between gap-4">
+  <div>
+    <p class="kicker flex items-center gap-3">
+      <span class="inline-block h-px w-8 bg-[var(--accent)]" aria-hidden="true"></span>
+      {kicker}
+    </p>
+    <Heading class="display mt-3 text-4xl font-semibold text-[var(--text)] sm:text-5xl">{title}</Heading>
+  </div>
+  {linkHref && (
+    <a class="kicker shrink-0 hover:text-[var(--accent-strong)]" href={withBase(linkHref)}>
+      {linkLabel} →
+    </a>
+  )}
+</div>

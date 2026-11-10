@@ -36,6 +36,12 @@ branch and only merge or push to `main` when Nikhil says so.
 - Colours come from CSS variables in `src/styles/global.css` (`--accent`, `--accent-solid`,
   `--text`, `--muted`, `--surface`, `--line`). Keep light and dark themes both readable.
 - Base element styles go inside `@layer base`; unlayered rules override Tailwind utilities.
+- Design language (inspired by shravankumarhiregoudar.github.io, in our own cyan/indigo palette):
+  serif display headings (`.display`, Playfair Display), mono uppercase labels (`.kicker`),
+  `.chip` tags, `.name-gradient`, section headers via `SectionHeading.astro`. Dark is the default
+  theme; light must stay readable. Motion (particles, typing, marquee) honours
+  `prefers-reduced-motion`. Never hide content behind scroll-reveal animations: recruiters skim
+  and link previews must show content.
 - Certifications are study targets (`status: "planned"`), not earned. Do not present them as earned.
 
 ## Verifying UI changes

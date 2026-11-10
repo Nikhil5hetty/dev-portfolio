@@ -3,6 +3,7 @@ import { getCollection } from "astro:content";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import EntryCard from "@/components/EntryCard.astro";
 import ExperienceList from "@/components/ExperienceList.astro";
+import SectionHeading from "@/components/SectionHeading.astro";
 import { SITE } from "@/site";
 import { isPublished, sortByDateDesc } from "@/lib/content";
 import { withBase } from "@/lib/withBase";
@@ -24,36 +25,32 @@ const secondaryButtonClass =
 ---
 
 <BaseLayout title={SITE.title} description={SITE.description}>
-  <section class="panel home-hero rounded-[2rem] p-7 sm:p-10">
-    <div class="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-start">
-      <div class="space-y-5">
-        <p class="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2 text-sm text-[var(--text)]">
-          <span class="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true"></span>
+  <section class="pt-6 sm:pt-12">
+    <div class="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-center">
+      <div class="space-y-6">
+        <p class="kicker">— {PROFILE.location} · {PROFILE.stackLine} —</p>
+        <h1 class="display text-6xl font-semibold leading-[0.95] text-[var(--text)] sm:text-8xl">
+          Nikhil<br /><span class="name-gradient">Shetty</span>
+        </h1>
+        <p class="text-xl text-[var(--text)] sm:text-2xl" aria-label={PROFILE.role}>
+          <span data-typed data-roles={JSON.stringify(PROFILE.rotatingRoles)}>{PROFILE.role}</span><span class="typed-caret" aria-hidden="true"></span>
+        </p>
+        <p class="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--text)]">
+          <span class="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true"></span>
           {PROFILE.availability}
         </p>
-        <div>
-          <h1 class="text-4xl font-semibold tracking-[-0.03em] text-[var(--text)] sm:text-5xl">
-            {PROFILE.name}
-          </h1>
-          <p class="mt-2 text-lg font-medium text-[var(--accent)] sm:text-xl">
-            {PROFILE.role} · {PROFILE.stackLine}
-          </p>
-        </div>
-        <p class="max-w-2xl text-2xl font-semibold leading-snug tracking-[-0.02em] text-[var(--text)] sm:text-[1.75rem]">
+        <p class="display max-w-2xl text-2xl leading-snug text-[var(--text)] sm:text-3xl">
           {PROFILE.headline}
         </p>
         <p class="max-w-2xl text-base leading-7 text-[var(--muted)] sm:text-lg">
           {PROFILE.summary}
-        </p>
-        <p class="text-sm text-[var(--muted)]">
-          {PROFILE.location} · {PROFILE.currentStudy}
         </p>
       </div>
 
       <img
         src={withBase("/images/profile-photo.jpeg")}
         alt="Portrait of Nikhil Shetty"
-        class="hidden aspect-square w-48 rounded-[1.75rem] border border-[var(--line)] object-cover object-[50%_18%] shadow-[var(--shadow)] lg:block"
+        class="hidden aspect-square w-64 rounded-full border border-[var(--line)] object-cover object-[50%_18%] shadow-[0_0_0_8px_var(--surface),var(--shadow)] lg:block"
         loading="eager"
         decoding="async"
       />
@@ -85,45 +82,28 @@ const secondaryButtonClass =
 
     <dl class="mt-10 grid gap-px overflow-hidden rounded-[1.25rem] border border-[var(--line)] bg-[var(--line)] sm:grid-cols-2 lg:grid-cols-4">
       {PROFILE.impactCards.map((card) => (
-        <div class="bg-[var(--surface-strong)] p-5">
+        <div class="bg-[var(--surface-strong)] p-6">
           <dt class="sr-only">{card.label}</dt>
-          <dd class="text-3xl font-semibold tracking-[-0.03em] text-[var(--accent)]">{card.value}</dd>
+          <dd class="display text-4xl font-semibold text-[var(--accent)]">{card.value}</dd>
           <dd class="mt-1 text-sm leading-5 text-[var(--muted)]">{card.label}</dd>
         </div>
       ))}
     </dl>
   </section>
 
-  <section class="mt-16 space-y-6">
-    <div class="flex items-end justify-between gap-4">
-      <div>
-        <p class="home-kicker text-sm text-[var(--accent)]">Experience</p>
-        <h2 class="home-title mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--text)] sm:text-4xl">
-          Where I've shipped production data systems
-        </h2>
-      </div>
-      <a class="shrink-0 text-sm text-[var(--accent)] hover:text-[var(--accent-strong)]" href={withBase("/about/")}>
-        Full history
-      </a>
+  <div class="marquee mt-16" aria-hidden="true">
+    <div class="marquee-track">
+      {[...PROFILE.coreStack, ...PROFILE.coreStack].map((skill) => <span>{skill}</span>)}
     </div>
-    <div class="panel rounded-[2rem] p-6 sm:p-8">
-      <ExperienceList compact />
-    </div>
+  </div>
+
+  <section class="mt-20 space-y-8">
+    <SectionHeading kicker="Career" title="Work Experience" linkLabel="Full history" linkHref="/about/" />
+    <ExperienceList compact />
   </section>
 
-  <section class="mt-16 space-y-6">
-    <div class="flex items-end justify-between gap-4">
-      <div>
-        <p class="home-kicker text-sm text-[var(--accent)]">Projects</p>
-        <h2 class="home-title mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--text)] sm:text-4xl">
-          Spark and lakehouse case studies
-        </h2>
-      </div>
-      <a class="shrink-0 text-sm text-[var(--accent)] hover:text-[var(--accent-strong)]" href={withBase("/projects/")}>
-        View all
-      </a>
-    </div>
-
+  <section class="mt-20 space-y-8">
+    <SectionHeading kicker="Projects" title="Case Studies" linkLabel="View all" linkHref="/projects/" />
     <div class="grid gap-5 md:grid-cols-3">
       {featuredProjects.slice(0, 3).map((project) => (
         <EntryCard
@@ -137,19 +117,8 @@ const secondaryButtonClass =
     </div>
   </section>
 
-  <section class="mt-16 space-y-6">
-    <div class="flex items-end justify-between gap-4">
-      <div>
-        <p class="home-kicker text-sm text-[var(--accent)]">Writing</p>
-        <h2 class="home-title mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--text)] sm:text-4xl">
-          Practical notes on Spark and data delivery
-        </h2>
-      </div>
-      <a class="shrink-0 text-sm text-[var(--accent)] hover:text-[var(--accent-strong)]" href={withBase("/blog/")}>
-        View all
-      </a>
-    </div>
-
+  <section class="mt-20 space-y-8">
+    <SectionHeading kicker="Writing" title="Notes on Spark & Data Delivery" linkLabel="View all" linkHref="/blog/" />
     <div class="grid gap-5 md:grid-cols-2">
       {publishedPosts.slice(0, 2).map((post) => (
         <EntryCard
@@ -163,3 +132,36 @@ const secondaryButtonClass =
     </div>
   </section>
 </BaseLayout>
+
+<script>
+  // Types and deletes each role in turn under the name.
+  const target = document.querySelector<HTMLElement>("[data-typed]");
+  const roles: string[] = JSON.parse(target?.dataset.roles ?? "[]");
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (target && roles.length > 1 && !reduceMotion) {
+    let roleIndex = 0;
+    let length = roles[0].length;
+    let deleting = true;
+    const PAUSE_MS = 1800;
+
+    const tick = () => {
+      const role = roles[roleIndex];
+      length += deleting ? -1 : 1;
+      target.textContent = role.slice(0, length);
+      if (deleting && length === 0) {
+        deleting = false;
+        roleIndex = (roleIndex + 1) % roles.length;
+        length = 0;
+        setTimeout(tick, 300);
+      } else if (!deleting && length === roles[roleIndex].length) {
+        deleting = true;
+        setTimeout(tick, PAUSE_MS);
+      } else {
+        setTimeout(tick, deleting ? 35 : 70);
+      }
+    };
+
+    setTimeout(tick, PAUSE_MS);
+  }
+</script>

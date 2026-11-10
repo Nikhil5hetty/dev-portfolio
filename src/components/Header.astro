@@ -7,27 +7,25 @@ const currentPath = Astro.url.pathname;
 ---
 
 <header class="sticky top-0 z-40 border-b border-[var(--line)] bg-[color:var(--nav-bg)]/80 backdrop-blur-xl">
-  <div class="container grid gap-4 py-4 sm:grid-cols-[1fr_auto] sm:items-center">
-    <a href={withBase("/")} class="group flex items-center gap-3">
-      <span class="text-lg font-semibold tracking-[0.04em] text-[var(--accent)] sm:text-xl">
-        NIKHIL SHETTY
-      </span>
+  <div class="container flex items-center justify-between gap-3 py-3 sm:py-4">
+    <a href={withBase("/")} class="shrink-0 text-base font-semibold tracking-[0.04em] text-[var(--accent)] sm:text-xl" aria-label="Nikhil Shetty, home">
+      <span class="sm:hidden">NS</span>
+      <span class="hidden sm:inline">NIKHIL SHETTY</span>
     </a>
 
-    <div class="flex flex-wrap items-center gap-3 sm:justify-end">
-      <nav aria-label="Primary" class="w-full sm:w-auto">
-        <ul class="flex flex-wrap items-center gap-2 text-[1rem] font-medium text-[var(--muted)] sm:justify-end sm:gap-3 sm:text-[1.05rem]">
+    <div class="flex items-center gap-1 sm:gap-3">
+      <nav aria-label="Primary">
+        <ul class="flex items-center gap-0.5 text-sm font-medium text-[var(--muted)] sm:gap-2 sm:text-[1.05rem]">
           {
             NAV_LINKS.map((link) => {
               const href = withBase(link.href);
-              const active =
-                currentPath === href || currentPath === `${href.replace(/\/$/, "")}/`;
+              const active = currentPath.startsWith(href);
               return (
                 <li>
                   <a
                     href={href}
                     class:list={[
-                      "rounded-full px-3.5 py-2.5 transition-colors hover:bg-[var(--surface)] hover:text-[var(--text)]",
+                      "rounded-full px-2.5 py-2 transition-colors hover:bg-[var(--surface)] hover:text-[var(--text)] sm:px-3.5 sm:py-2.5",
                       active && "bg-[var(--surface)] text-[var(--text)]",
                     ]}
                   >
@@ -37,6 +35,15 @@ const currentPath = Astro.url.pathname;
               );
             })
           }
+          <li class="hidden sm:block">
+            <a
+              href={withBase(SITE.resumePath)}
+              download
+              class="rounded-full px-3.5 py-2.5 text-[var(--accent)] transition-colors hover:bg-[var(--surface)]"
+            >
+              Resume
+            </a>
+          </li>
         </ul>
       </nav>
       <ThemeToggle />

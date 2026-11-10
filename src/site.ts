@@ -1,23 +1,23 @@
 export const SITE = {
-  author: "Nikhil",
-  title: "Nikhil | Spark ETL & Databricks Data Engineer",
+  author: "Nikhil Shetty",
+  title: "Nikhil Shetty | Data Engineer (Spark, Databricks, Kafka)",
   description:
-    "Projects, writing, and portfolio notes on Spark ETL, Databricks Lakehouse, streaming, and production data engineering.",
+    "Principal Data Engineer with 8+ years building Spark, Databricks and Kafka data platforms. Based in Bern, open to roles in Switzerland and Europe.",
   url: "https://Nikhil5hetty.github.io/dev-portfolio",
   resumePath: "/resume/Nikhil_Shetty.pdf",
   email: "05nikhilshetty@gmail.com",
+  github: "https://github.com/Nikhil5hetty",
   linkedin: "https://www.linkedin.com/in/nikhil5hetty/",
 };
 
 export const NAV_LINKS = [
-  { label: "Home", href: "/" },
-  { label: "Blog", href: "/blog/" },
+  { label: "Experience", href: "/about/" },
   { label: "Projects", href: "/projects/" },
-  { label: "About Me", href: "/about/" },
+  { label: "Writing", href: "/blog/" },
 ];
 
 export const SOCIAL_LINKS = [
-  { label: "GitHub", href: "https://github.com/Nikhil5hetty" },
-  { label: "LinkedIn", href: "https://www.linkedin.com/in/nikhil5hetty/" },
-  { label: "Email", href: "mailto:05nikhilshetty@gmail.com" },
+  { label: "GitHub", href: SITE.github },
+  { label: "LinkedIn", href: SITE.linkedin },
+  { label: "Email", href: `mailto:${SITE.email}` },
 ];

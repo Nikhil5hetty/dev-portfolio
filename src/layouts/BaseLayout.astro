@@ -3,6 +3,7 @@ import { SITE } from "@/site";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import { withBase } from "@/lib/withBase";
+import { PROFILE } from "@/data/profile";
 import "@/styles/global.css";
 
 interface Props {
@@ -21,10 +22,10 @@ const structuredData = {
   "@context": "https://schema.org",
   "@type": "Person",
   name: SITE.author,
-  jobTitle: "Data Engineer",
+  jobTitle: PROFILE.role,
   url: SITE.url,
   email: SITE.email,
-  sameAs: ["https://github.com/Nikhil5hetty"],
+  sameAs: [SITE.github, SITE.linkedin],
   knowsAbout: [
     "Apache Spark",
     "Databricks",
